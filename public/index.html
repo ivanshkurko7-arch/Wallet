@@ -153,12 +153,79 @@
     width: 100%; padding: 14px; border: none; border-radius: 12px; margin-top: 18px;
     background: linear-gradient(135deg, var(--purple), var(--pink)); color: white; font-size: 15px; font-weight: 700;
   }
+  .submit-btn:disabled, .tx-del:disabled { opacity: 0.5; pointer-events: none; }
+
+  .section-card.tappable { cursor: pointer; }
+  .section-head.tappable { cursor: pointer; }
+  .section-head .chevron { color: var(--hint); font-size: 15px; margin-left: 6px; }
+
+  /* Detail modal (second overlay, opens above the add-transaction sheet) */
+  .detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 30;
+  }
+  .detail-overlay.open { display: flex; }
+  .detail-sheet {
+    background: #14102a; width: 100%; border-radius: 22px 22px 0 0;
+    padding: 18px; max-height: 88vh; overflow-y: auto;
+  }
+  .detail-head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 4px; }
+  .detail-head h2 { font-size: 17px; }
+  .detail-close { background: rgba(255,255,255,0.08); border:none; color:white; width:30px; height:30px; border-radius:10px; font-size:15px; }
+  .detail-sub { font-size: 12px; color: var(--hint); margin-bottom: 14px; }
+  .back-row { display:flex; align-items:center; gap:8px; margin-bottom: 10px; }
+  .back-btn { background: rgba(255,255,255,0.08); border:none; color:white; padding: 6px 10px; border-radius: 10px; font-size: 12px; }
+
+  .detail-big-donut { display:flex; align-items:center; gap: 18px; margin-bottom: 14px; }
+  .stat-line { display:flex; justify-content:space-between; align-items:center; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .stat-line:last-child { border-bottom: none; }
+  .stat-line .sl-left { display:flex; align-items:center; gap:10px; min-width:0; }
+  .stat-line .sl-ic { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .stat-line .sl-name { font-size: 13.5px; font-weight: 600; }
+  .stat-line .sl-count { font-size: 11px; color: var(--hint); }
+  .stat-line .sl-right { text-align:right; flex-shrink:0; }
+  .stat-line .sl-amt { font-size: 13.5px; font-weight: 700; }
+  .stat-line .sl-pct { font-size: 10.5px; color: var(--hint); }
+
+  .member-detail-card { background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .member-detail-card .mdc-head { display:flex; align-items:center; gap:10px; margin-bottom: 10px; }
+  .member-detail-card .mdc-name { font-weight: 700; font-size: 14px; }
+  .mdc-grid { display:flex; gap: 10px; }
+  .mdc-cell { flex:1; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 9px; text-align:center; }
+  .mdc-cell .lbl { font-size: 10px; color: var(--hint); margin-bottom: 3px; }
+  .mdc-cell .val { font-size: 13px; font-weight: 700; }
+  .mdc-cell .val.expense { color: #ff6b81; }
+  .mdc-cell .val.income { color: #5be08a; }
+
+  .day-group { margin-bottom: 6px; }
+  .day-label { font-size: 11px; color: var(--hint); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 12px 0 6px; }
+  .tx-row.clickable { cursor: pointer; }
+
+  .tx-detail-grid { display:flex; flex-direction:column; gap: 0; margin: 10px 0 4px; }
+  .tx-detail-row { display:flex; justify-content:space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+  .tx-detail-row:last-child { border-bottom: none; }
+  .tx-detail-row .k { color: var(--hint); }
+  .tx-detail-row .v { font-weight: 600; text-align:right; }
+  .tx-detail-amt { font-size: 26px; font-weight: 800; text-align:center; margin: 6px 0 2px; }
+  .tx-detail-amt.expense { color: #ff6b81; }
+  .tx-detail-amt.income { color: #5be08a; }
+  .tx-detail-cat { text-align:center; color: var(--hint); font-size: 12.5px; margin-bottom: 8px; }
+  .danger-btn {
+    width: 100%; padding: 13px; border: none; border-radius: 12px; margin-top: 14px;
+    background: rgba(255,107,129,0.15); color: #ff6b81; font-size: 14px; font-weight: 700;
+  }
+
+  .copy-row { display:flex; gap: 8px; align-items:center; margin-top: 8px; }
+  .copy-row code { flex:1; background: rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 10px; font-size: 14px; text-align:center; letter-spacing: 1px; }
+  .copy-btn { background: var(--purple); border:none; color:white; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; }
+
+  .info-banner { background: rgba(124,92,255,0.12); border: 1px solid rgba(124,92,255,0.3); border-radius: 12px; padding: 10px 12px; font-size: 12px; color: #cfc7ff; margin-bottom: 14px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="icon-btn" onclick="showInvite()">☰</button>
+  <button class="icon-btn" onclick="openFamilyDetail()">☰</button>
   <div class="title">
     <h1>Наш кошелёк</h1>
     <div class="sub">Вместе к общим целям ❤️</div>
@@ -179,13 +246,13 @@
 
 <div class="action-row">
   <button class="action-btn" onclick="openSheet('expense')"><div class="ic">➕</div><div class="lb">Добавить</div></button>
-  <button class="action-btn" onclick="showInvite()"><div class="ic">🔗</div><div class="lb">Пригласить</div></button>
-  <button class="action-btn" onclick="scrollToId('accountsCard')"><div class="ic">💳</div><div class="lb">Способы</div></button>
-  <button class="action-btn" onclick="scrollToId('txCard')"><div class="ic">📋</div><div class="lb">История</div></button>
+  <button class="action-btn" onclick="openFamilyDetail()"><div class="ic">🔗</div><div class="lb">Пригласить</div></button>
+  <button class="action-btn" onclick="openStorageDetail()"><div class="ic">💳</div><div class="lb">Хранение</div></button>
+  <button class="action-btn" onclick="openTxDetail()"><div class="ic">📋</div><div class="lb">История</div></button>
 </div>
 
 <div class="section-card" id="categoriesCard">
-  <div class="section-head"><div class="h">Расходы по категориям</div></div>
+  <div class="section-head tappable" onclick="openCategoriesDetail()"><div class="h">Расходы по категориям</div><div class="chevron">›</div></div>
   <div class="donut-wrap">
     <svg id="donutSvg" width="108" height="108" viewBox="0 0 108 108"></svg>
     <div class="donut-legend" id="categories"></div>
@@ -193,21 +260,21 @@
 </div>
 
 <div class="section-card" id="membersCard">
-  <div class="section-head"><div class="h">Кто сколько потратил</div></div>
+  <div class="section-head tappable" onclick="openMembersDetail()"><div class="h">Кто сколько потратил</div><div class="chevron">›</div></div>
   <div class="member-list" id="members"></div>
 </div>
 
 <div class="section-card" id="accountsCard">
-  <div class="section-head"><div class="h">Способы оплаты</div></div>
+  <div class="section-head tappable" onclick="openStorageDetail()"><div class="h">Где хранятся деньги</div><div class="chevron">›</div></div>
   <div class="donut-legend" id="accounts"></div>
 </div>
 
 <div class="section-card" id="txCard">
-  <div class="section-head"><div class="h">Последние операции</div></div>
+  <div class="section-head tappable" onclick="openTxDetail()"><div class="h">Последние операции</div><div class="chevron">›</div></div>
   <div id="transactions"></div>
 </div>
 
-<div class="section-card">
+<div class="section-card tappable" onclick="openFamilyDetail()">
   <div class="invite-row">
     <span>Код приглашения партнёра</span>
     <code id="inviteCode">—</code>
@@ -216,10 +283,14 @@
 
 <div class="bottom-nav">
   <button class="nav-item active" onclick="scrollToId('balanceCardTop')"><div class="ic">🏠</div>Главная</button>
-  <button class="nav-item" onclick="scrollToId('txCard')"><div class="ic">📋</div>Операции</button>
+  <button class="nav-item" onclick="openTxDetail()"><div class="ic">📋</div>Операции</button>
   <button class="nav-fab" onclick="openSheet('expense')">+</button>
-  <button class="nav-item" onclick="scrollToId('categoriesCard')"><div class="ic">📊</div>Аналитика</button>
-  <button class="nav-item" onclick="showInvite()"><div class="ic">👥</div>Семья</button>
+  <button class="nav-item" onclick="openCategoriesDetail()"><div class="ic">📊</div>Аналитика</button>
+  <button class="nav-item" onclick="openFamilyDetail()"><div class="ic">👥</div>Семья</button>
+</div>
+
+<div class="detail-overlay" id="detailOverlay" onclick="closeOnDetailOverlay(event)">
+  <div class="detail-sheet" id="detailSheet"></div>
 </div>
 
 <div class="sheet-overlay" id="overlay" onclick="closeOnOverlay(event)">
@@ -234,7 +305,7 @@
     <label>Категория</label>
     <div class="chip-group" id="catButtons"></div>
 
-    <label>Способ оплаты</label>
+    <label>Где хранятся деньги</label>
     <div class="chip-group" id="accButtons"></div>
 
     <label>Комментарий (необязательно)</label>
@@ -267,16 +338,41 @@ async function api(path, opts = {}) {
   return data;
 }
 function fmt(n) { return new Intl.NumberFormat('uk-UA').format(Math.round(n)); }
-function initials(name) { return (name || '?').trim().charAt(0).toUpperCase(); }
+function initials(name) { return esc((name || '?').trim().charAt(0).toUpperCase()); }
+function esc(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 function scrollToId(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
-function showInvite() {
-  if (!lastSummary) return;
-  tg.showAlert(
-    `Код приглашения: ${lastSummary.invite_code}\n\n` +
-    `Партнёр вводит в боте: /link ${lastSummary.invite_code}\n\n` +
-    `Участников в бюджете: ${lastSummary.members.length}`
-  );
+let lastTxPreview = [];
+
+function buildTxRow(t, { clickable = false } = {}) {
+  const row = document.createElement('div');
+  row.className = 'tx-row' + (clickable ? ' clickable' : '');
+  const name = esc(t.first_name || t.username || 'Кто-то');
+  const sign = t.type === 'expense' ? '−' : '+';
+  const icon = t.type === 'expense' ? (ACCOUNT_ICONS[t.account] || '💸') : '💰';
+  row.innerHTML = `
+    <div class="tx-icon">${icon}</div>
+    <div class="tx-info">
+      <div class="tx-cat">${esc(t.category)}${t.comment ? ' · ' + esc(t.comment) : ''}</div>
+      <div class="tx-meta">${name} · ${esc(t.account || 'Наличные')}</div>
+    </div>
+    <div class="tx-amt ${t.type}">${sign}${fmt(t.amount)} ₴</div>
+    <button class="tx-del" data-id="${t.id}">✕</button>
+  `;
+  row.querySelector('.tx-del').addEventListener('click', (e) => {
+    e.stopPropagation();
+    confirmDelete(t.id);
+  });
+  if (clickable) {
+    row.querySelector('.tx-info').addEventListener('click', () => openTxSingleDetail(t));
+    row.querySelector('.tx-icon').addEventListener('click', () => openTxSingleDetail(t));
+    row.querySelector('.tx-amt').addEventListener('click', () => openTxSingleDetail(t));
+  }
+  return row;
 }
 
 async function loadData() {
@@ -302,7 +398,7 @@ async function loadData() {
     const addAv = document.createElement('div');
     addAv.className = 'avatar add';
     addAv.textContent = '+';
-    addAv.onclick = showInvite;
+    addAv.onclick = openFamilyDetail;
     avatarRow.appendChild(addAv);
 
     renderDonut(summary.by_category, summary.total_expense);
@@ -310,28 +406,15 @@ async function loadData() {
     renderMembers(summary.by_user);
 
     const txs = await api(`/api/transactions?init_data=${encodeURIComponent(initData)}&limit=30`);
+    lastTxPreview = txs;
     const txEl = document.getElementById('transactions');
     txEl.innerHTML = '';
     if (txs.length === 0) txEl.innerHTML = '<div class="empty">Пока нет операций</div>';
-    for (const t of txs) {
-      const row = document.createElement('div');
-      row.className = 'tx-row';
-      const name = t.first_name || t.username || 'Кто-то';
-      const sign = t.type === 'expense' ? '−' : '+';
-      const icon = t.type === 'expense' ? (ACCOUNT_ICONS[t.account] || '💸') : '💰';
-      row.innerHTML = `
-        <div class="tx-icon">${icon}</div>
-        <div class="tx-info">
-          <div class="tx-cat">${t.category}${t.comment ? ' · ' + t.comment : ''}</div>
-          <div class="tx-meta">${name} · ${t.account || 'Наличные'}</div>
-        </div>
-        <div class="tx-amt ${t.type}">${sign}${fmt(t.amount)} ₴</div>
-        <button class="tx-del" data-id="${t.id}">✕</button>
-      `;
-      row.querySelector('.tx-del').addEventListener('click', () => confirmDelete(t.id));
-      txEl.appendChild(row);
-    }
-  } catch (e) { console.error(e); }
+    for (const t of txs) txEl.appendChild(buildTxRow(t, { clickable: true }));
+  } catch (e) {
+    console.error(e);
+    tg.showAlert('Не удалось загрузить данные: ' + e.message);
+  }
 }
 
 function summaryAccountExpenses(byAccount) {
@@ -398,7 +481,7 @@ function renderMembers(byUser) {
     row.innerHTML = `
       <div class="avatar" style="margin-right:0;">${initials(name)}</div>
       <div class="m-info">
-        <div class="m-name">${name}</div>
+        <div class="m-name">${esc(name)}</div>
         <div class="m-bar"><div class="m-bar-fill" style="width:${barPct}%"></div></div>
       </div>
       <div style="text-align:right;">
@@ -410,17 +493,250 @@ function renderMembers(byUser) {
   });
 }
 
-function confirmDelete(id) {
+/* ---------- Detail modal (opens a dedicated window instead of just scrolling) ---------- */
+
+function openDetail(html) {
+  document.getElementById('detailSheet').innerHTML = html;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); }
+function closeOnDetailOverlay(e) { if (e.target.id === 'detailOverlay') closeDetail(); }
+
+function detailHeader(title, sub) {
+  return `
+    <div class="detail-head"><h2>${title}</h2><button class="detail-close" onclick="closeDetail()">✕</button></div>
+    ${sub ? `<div class="detail-sub">${sub}</div>` : ''}
+  `;
+}
+
+function openCategoriesDetail() {
+  if (!lastSummary) return;
+  const byCategory = lastSummary.by_category || {};
+  const total = lastSummary.total_expense || 0;
+  const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+  const counts = {};
+  for (const t of lastTxPreview) if (t.type === 'expense') counts[t.category] = (counts[t.category] || 0) + 1;
+
+  let rows = '';
+  if (entries.length === 0) {
+    rows = '<div class="empty">Пока нет расходов</div>';
+  } else {
+    entries.forEach(([name, amt], i) => {
+      const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
+      rows += `
+        <div class="stat-line">
+          <div class="sl-left">
+            <div class="sl-ic" style="background:${COLORS[i % COLORS.length]}22;">●</div>
+            <div>
+              <div class="sl-name">${name}</div>
+              <div class="sl-count">${counts[name] || 0} операц${((counts[name]||0)%10===1 && counts[name]!==11) ? 'ия' : 'ий'}</div>
+            </div>
+          </div>
+          <div class="sl-right">
+            <div class="sl-amt">${fmt(amt)} ₴</div>
+            <div class="sl-pct">${pct}%</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  openDetail(`
+    ${detailHeader('Расходы по категориям', `Всего потрачено ${fmt(total)} ₴`)}
+    <div style="margin-top:6px;">${rows}</div>
+  `);
+}
+
+function openMembersDetail() {
+  if (!lastSummary) return;
+  const byUser = lastSummary.by_user || {};
+  const entries = Object.entries(byUser);
+  let cards = '';
+  if (entries.length === 0) {
+    cards = '<div class="empty">Пока нет операций</div>';
+  } else {
+    for (const [name, vals] of entries) {
+      const net = vals.income - vals.expense;
+      cards += `
+        <div class="member-detail-card">
+          <div class="mdc-head">
+            <div class="avatar" style="margin-right:0;">${initials(name)}</div>
+            <div class="mdc-name">${esc(name)}</div>
+          </div>
+          <div class="mdc-grid">
+            <div class="mdc-cell"><div class="lbl">Доход</div><div class="val income">${fmt(vals.income)} ₴</div></div>
+            <div class="mdc-cell"><div class="lbl">Расход</div><div class="val expense">${fmt(vals.expense)} ₴</div></div>
+            <div class="mdc-cell"><div class="lbl">Итог</div><div class="val ${net >= 0 ? 'income' : 'expense'}">${net >= 0 ? '+' : ''}${fmt(net)} ₴</div></div>
+          </div>
+        </div>`;
+    }
+  }
+  openDetail(`
+    ${detailHeader('Кто сколько потратил')}
+    <div style="margin-top:6px;">${cards}</div>
+  `);
+}
+
+function openStorageDetail() {
+  if (!lastSummary) return;
+  const byAccount = lastSummary.by_account || {};
+  let rows = '';
+  const accounts = accountsList.length ? accountsList : Object.keys(byAccount);
+  const withData = accounts.filter((a) => byAccount[a] && (byAccount[a].expense || byAccount[a].income));
+  const list = withData.length ? withData : accounts;
+  if (list.length === 0) {
+    rows = '<div class="empty">Пока нет данных</div>';
+  } else {
+    for (const acc of list) {
+      const vals = byAccount[acc] || { expense: 0, income: 0 };
+      const net = vals.income - vals.expense;
+      rows += `
+        <div class="stat-line">
+          <div class="sl-left">
+            <div class="sl-ic">${ACCOUNT_ICONS[acc] || '📦'}</div>
+            <div><div class="sl-name">${acc}</div></div>
+          </div>
+          <div class="sl-right">
+            <div class="sl-amt ${net >= 0 ? '' : ''}" style="color:${net >= 0 ? '#5be08a' : '#ff6b81'}">${net >= 0 ? '+' : ''}${fmt(net)} ₴</div>
+            <div class="sl-pct">доход ${fmt(vals.income)} · расход ${fmt(vals.expense)}</div>
+          </div>
+        </div>`;
+    }
+  }
+  openDetail(`
+    ${detailHeader('Где хранятся деньги')}
+    <div class="info-banner">Показывает, сколько денег прошло через каждое место хранения: наличные, карту, валюту, крипту и другое — а не способ оплаты.</div>
+    ${rows}
+  `);
+}
+
+function groupByDay(txs) {
+  const groups = {};
+  const order = [];
+  const now = new Date();
+  const todayKey = now.toDateString();
+  const y = new Date(now); y.setDate(y.getDate() - 1);
+  const yesterdayKey = y.toDateString();
+  for (const t of txs) {
+    const d = new Date((t.created_at || 0) * 1000);
+    const key = d.toDateString();
+    if (!groups[key]) { groups[key] = []; order.push(key); }
+    groups[key].push(t);
+  }
+  return order.map((key) => {
+    let label;
+    if (key === todayKey) label = 'Сегодня';
+    else if (key === yesterdayKey) label = 'Вчера';
+    else label = new Date(groups[key][0].created_at * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    return { label, items: groups[key] };
+  });
+}
+
+async function openTxDetail() {
+  openDetail(`${detailHeader('Все операции')}<div id="fullTxList" style="margin-top:4px;"><div class="empty">Загрузка…</div></div>`);
+  try {
+    const txs = await api(`/api/transactions?init_data=${encodeURIComponent(initData)}&limit=500`);
+    lastFullTxList = txs;
+    const wrap = document.getElementById('fullTxList');
+    if (!wrap) return; // modal was closed before the request finished
+    wrap.innerHTML = '';
+    if (txs.length === 0) { wrap.innerHTML = '<div class="empty">Пока нет операций</div>'; return; }
+    for (const group of groupByDay(txs)) {
+      const g = document.createElement('div');
+      g.className = 'day-group';
+      g.innerHTML = `<div class="day-label">${group.label}</div>`;
+      for (const t of group.items) g.appendChild(buildTxRow(t, { clickable: true }));
+      wrap.appendChild(g);
+    }
+  } catch (e) {
+    const wrap = document.getElementById('fullTxList');
+    if (wrap) wrap.innerHTML = `<div class="empty">Не удалось загрузить операции: ${e.message}</div>`;
+  }
+}
+let lastFullTxList = [];
+
+function openTxSingleDetail(t) {
+  const name = esc(t.first_name || t.username || 'Кто-то');
+  const sign = t.type === 'expense' ? '−' : '+';
+  const date = t.created_at ? new Date(t.created_at * 1000).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '—';
+  openDetail(`
+    ${detailHeader('Операция')}
+    <div class="tx-detail-amt ${t.type}">${sign}${fmt(t.amount)} ₴</div>
+    <div class="tx-detail-cat">${esc(t.category)}</div>
+    <div class="tx-detail-grid">
+      <div class="tx-detail-row"><span class="k">Кто добавил</span><span class="v">${name}</span></div>
+      <div class="tx-detail-row"><span class="k">Где хранятся деньги</span><span class="v">${ACCOUNT_ICONS[t.account] || ''} ${esc(t.account || 'Наличные')}</span></div>
+      <div class="tx-detail-row"><span class="k">Дата</span><span class="v">${date}</span></div>
+      ${t.comment ? `<div class="tx-detail-row"><span class="k">Комментарий</span><span class="v">${esc(t.comment)}</span></div>` : ''}
+    </div>
+    <button class="danger-btn" id="detailDeleteBtn" onclick="confirmDelete(${Number(t.id)}, true)">🗑 Удалить операцию</button>
+  `);
+}
+
+function openFamilyDetail() {
+  if (!lastSummary) return;
+  let members = '';
+  for (const m of lastSummary.members) {
+    const rawName = m.first_name || m.username || 'Кто-то';
+    const name = esc(rawName);
+    members += `
+      <div class="stat-line">
+        <div class="sl-left">
+          <div class="avatar" style="margin-right:0;">${initials(rawName)}</div>
+          <div class="sl-name">${name}</div>
+        </div>
+      </div>`;
+  }
+  openDetail(`
+    ${detailHeader('Семья', `${lastSummary.members.length} участник(ов) в общем бюджете`)}
+    ${members}
+    <label style="display:block; font-size:11.5px; color:var(--hint); margin: 16px 0 4px;">Код приглашения партнёра</label>
+    <div class="copy-row">
+      <code id="inviteCodeDetail">${esc(lastSummary.invite_code)}</code>
+      <button class="copy-btn" onclick="copyInviteCode()">Копировать</button>
+    </div>
+    <div class="info-banner" style="margin-top:14px;">Партнёр вводит в боте: <b>/link ${esc(lastSummary.invite_code)}</b> — после этого у вас общий бюджет.</div>
+  `);
+}
+
+function copyInviteCode() {
+  const code = lastSummary ? lastSummary.invite_code : '';
+  if (!code) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(
+      () => tg.HapticFeedback.notificationOccurred('success'),
+      () => tg.showAlert('Код: ' + code)
+    );
+  } else {
+    tg.showAlert('Код: ' + code);
+  }
+}
+
+/* ---------- Delete transaction ---------- */
+
+let isDeletingId = null;
+
+function confirmDelete(id, fromDetail = false) {
+  if (isDeletingId === id) return;
   tg.showConfirm('Удалить эту операцию?', async (ok) => {
     if (!ok) return;
+    isDeletingId = id;
+    const btn = fromDetail ? document.getElementById('detailDeleteBtn') : null;
+    if (btn) { btn.disabled = true; btn.textContent = 'Удаляем…'; }
     try {
       await api('/api/transactions', {
         method: 'DELETE', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ init_data: initData, id }),
       });
       tg.HapticFeedback.notificationOccurred('success');
+      if (fromDetail) closeDetail();
       await loadData();
-    } catch (e) { tg.showAlert('Не удалось удалить операцию'); }
+    } catch (e) {
+      console.error(e);
+      tg.showAlert('Не удалось удалить операцию: ' + e.message);
+      if (btn) { btn.disabled = false; btn.textContent = '🗑 Удалить операцию'; }
+    } finally {
+      isDeletingId = null;
+    }
   });
 }
 
@@ -473,12 +789,19 @@ function openSheet(type) {
 function closeSheet() { document.getElementById('overlay').classList.remove('open'); }
 function closeOnOverlay(e) { if (e.target.id === 'overlay') closeSheet(); }
 
+let isSubmitting = false;
+
 async function submitTx() {
+  if (isSubmitting) return; // guards against double-tap creating duplicate transactions
   const amount = parseFloat(document.getElementById('amountInput').value);
   if (!amount || amount <= 0) { tg.showAlert('Введите сумму'); return; }
   const category = selectedCategory || 'Прочее';
   const account = selectedAccount || 'Наличные';
   const comment = document.getElementById('commentInput').value;
+
+  isSubmitting = true;
+  const btn = document.querySelector('.submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Сохраняем…'; }
   try {
     await api('/api/transactions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -487,7 +810,13 @@ async function submitTx() {
     closeSheet();
     tg.HapticFeedback.notificationOccurred('success');
     await loadData();
-  } catch (e) { tg.showAlert('Не получилось сохранить операцию'); }
+  } catch (e) {
+    console.error(e);
+    tg.showAlert('Не получилось сохранить операцию: ' + e.message);
+  } finally {
+    isSubmitting = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Добавить'; }
+  }
 }
 
 loadData();
