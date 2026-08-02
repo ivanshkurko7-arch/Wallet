@@ -10,6 +10,10 @@ const DEFAULT_CATEGORIES = [
   'Здоровье', 'Одежда', 'Подписки', 'Прочее',
 ];
 
+const DEFAULT_ACCOUNTS = [
+  'Карта', 'Наличные', 'Валюта', 'Крипта', 'Другое',
+];
+
 function genCode(length = 6) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let s = '';
@@ -90,19 +94,43 @@ async function linkFamilies(userId, inviteCode) {
   return { ok: true, message: 'Готово! Теперь у вас общий бюджет.' };
 }
 
-async function addTransaction(userId, amount, type, category, comment) {
+async function addTransaction(userId, amount, type, category, comment, account) {
   const familyId = await getFamilyId(userId);
   if (!familyId) throw new Error('Пользователь не найден, отправьте /start в бота');
-  const { error } = await supabase.from('transactions').insert({
+  const { data, error } = await supabase.from('transactions').insert({
     family_id: familyId,
     user_id: userId,
     amount,
     type,
     category,
     comment: comment || '',
+    account: account || 'Наличные',
     created_at: Math.floor(Date.now() / 1000),
-  });
+  }).select().single();
   if (error) throw error;
+  return data;
+}
+
+async function deleteTransaction(userId, transactionId) {
+  const familyId = await getFamilyId(userId);
+  if (!familyId) throw new Error('Пользователь не найден, отправьте /start в бота');
+
+  const { data: tx, error: selectError } = await supabase
+    .from('transactions').select('*').eq('id', transactionId).maybeSingle();
+  if (selectError) throw selectError;
+
+  // Compare as strings: Postgres bigint columns can come back as either a JS
+  // number or a numeric string depending on the driver/version, so a strict
+  // === comparison could wrongly reject a legitimate delete.
+  if (!tx || String(tx.family_id) !== String(familyId)) {
+    throw new Error('Операция не найдена');
+  }
+
+  const { error, count } = await supabase
+    .from('transactions').delete({ count: 'exact' }).eq('id', transactionId);
+  if (error) throw error;
+  if (!count) throw new Error('Операция уже была удалена');
+  return tx;
 }
 
 async function getFamilyMembers(familyId) {
@@ -130,19 +158,24 @@ async function getSummary(familyId) {
   const transactions = await getTransactions(familyId, 100000);
   const byUser = {};
   const byCategory = {};
+  const byAccount = {};
   let totalExpense = 0;
   let totalIncome = 0;
 
   for (const t of transactions) {
     const name = t.first_name || t.username || String(t.user_id);
     if (!byUser[name]) byUser[name] = { expense: 0, income: 0 };
+    const account = t.account || 'Наличные';
+    if (!byAccount[account]) byAccount[account] = { expense: 0, income: 0 };
     const amount = Number(t.amount);
     if (t.type === 'expense') {
       byUser[name].expense += amount;
+      byAccount[account].expense += amount;
       totalExpense += amount;
       byCategory[t.category] = (byCategory[t.category] || 0) + amount;
     } else {
       byUser[name].income += amount;
+      byAccount[account].income += amount;
       totalIncome += amount;
     }
   }
@@ -150,6 +183,7 @@ async function getSummary(familyId) {
   return {
     by_user: byUser,
     by_category: byCategory,
+    by_account: byAccount,
     total_expense: totalExpense,
     total_income: totalIncome,
     balance: totalIncome - totalExpense,
@@ -158,11 +192,13 @@ async function getSummary(familyId) {
 
 module.exports = {
   DEFAULT_CATEGORIES,
+  DEFAULT_ACCOUNTS,
   getOrCreateUser,
   getInviteCode,
   getFamilyId,
   linkFamilies,
   addTransaction,
+  deleteTransaction,
   getFamilyMembers,
   getTransactions,
   getSummary,
