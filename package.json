@@ -1,0 +1,10 @@
+{
+  "name": "budget-bot-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Семейный бюджет: Telegram-бот + Mini App на Netlify Functions + Supabase",
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Наш кошелёк</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #0f1115);
+    --text: var(--tg-theme-text-color, #ffffff);
+    --hint: var(--tg-theme-hint-color, #8a8f98);
+    --button: var(--tg-theme-button-color, #f5a623);
+    --button-text: var(--tg-theme-button-text-color, #111111);
+    --card: rgba(255,255,255,0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px 16px 100px;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  h1 { font-size: 20px; margin: 4px 0 16px; }
+  .card {
+    background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+  }
+  .balance { font-size: 32px; font-weight: 700; margin: 4px 0; }
+  .row { display: flex; justify-content: space-between; align-items: center; }
+  .muted { color: var(--hint); font-size: 13px; }
+  .members { display: flex; gap: 10px; margin-top: 10px; }
+  .member-chip {
+    flex: 1; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 10px;
+  }
+  .member-chip .name { font-size: 13px; color: var(--hint); }
+  .member-chip .amt { font-size: 17px; font-weight: 600; margin-top: 2px; }
+  .cat-row { display:flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 14px;}
+  .cat-row:last-child { border-bottom: none; }
+  .tx { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); display:flex; justify-content: space-between; }
+  .tx:last-child { border-bottom: none; }
+  .tx .left { display:flex; flex-direction: column; }
+  .tx .cat { font-size: 14px; }
+  .tx .meta { font-size: 12px; color: var(--hint); }
+  .tx .amt.expense { color: #ff6b6b; }
+  .tx .amt.income { color: #51cf66; }
+
+  .fab-row {
+    position: fixed; bottom: 16px; left: 16px; right: 16px;
+    display: flex; gap: 10px;
+  }
+  .fab {
+    flex: 1; padding: 14px; border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .fab.expense { background: #ff6b6b; color: white; }
+  .fab.income { background: #51cf66; color: #063; }
+
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: flex-end; z-index: 10;
+  }
+  .sheet-overlay.open { display: flex; }
+  .sheet {
+    background: var(--bg); width: 100%; border-radius: 20px 20px 0 0;
+    padding: 20px; max-height: 80vh; overflow-y: auto;
+  }
+  .sheet h2 { margin-top: 0; font-size: 18px; }
+  .sheet input {
+    width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04); color: var(--text); font-size: 16px; margin-bottom: 10px;
+  }
+  .cats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .cat-btn {
+    padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04); color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  .cat-btn.selected { background: var(--button); color: var(--button-text); border-color: var(--button); }
+  .submit-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    background: var(--button); color: var(--button-text); font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { flex:1; text-align:center; padding: 8px; border-radius: 10px; font-size: 13px; background: rgba(255,255,255,0.04); cursor:pointer; }
+  .tab.active { background: var(--button); color: var(--button-text); }
+  .invite-box { font-size: 13px; color: var(--hint); }
+  code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<h1>💰 Наш кошелёк</h1>
+
+<div class="card">
+  <div class="muted">Баланс</div>
+  <div class="balance" id="balance">—</div>
+  <div class="members" id="members"></div>
+</div>
+
+<div class="card">
+  <div class="row"><b>По категориям</b></div>
+  <div id="categories"></div>
+</div>
+
+<div class="card">
+  <div class="row"><b>Последние операции</b></div>
+  <div id="transactions"></div>
+</div>
+
+<div class="card invite-box" id="inviteBox"></div>
+
+<div class="fab-row">
+  <button class="fab expense" onclick="openSheet('expense')">− Расход</button>
+  <button class="fab income" onclick="openSheet('income')">+ Доход</button>
+</div>
+
+<div class="sheet-overlay" id="overlay" onclick="closeOnOverlay(event)">
+  <div class="sheet">
+    <h2 id="sheetTitle">Новый расход</h2>
+    <input type="number" inputmode="decimal" id="amountInput" placeholder="Сумма, ₽">
+    <div class="cats" id="catButtons"></div>
+    <input type="text" id="commentInput" placeholder="Комментарий (необязательно)">
+    <button class="submit-btn" onclick="submitTx()">Добавить</button>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const initData = tg.initData || "";
+let currentType = "expense";
+let selectedCategory = null;
+let categoriesList = [];
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n));
+}
+
+async function loadData() {
+  try {
+    const summary = await api(`/api/summary?init_data=${encodeURIComponent(initData)}`);
+    categoriesList = summary.categories;
+
+    document.getElementById('balance').textContent = fmt(summary.balance) + ' ₽';
+
+    const membersEl = document.getElementById('members');
+    membersEl.innerHTML = '';
+    for (const [name, vals] of Object.entries(summary.by_user)) {
+      const chip = document.createElement('div');
+      chip.className = 'member-chip';
+      chip.innerHTML = `<div class="name">${name}</div><div class="amt">−${fmt(vals.expense)} ₽</div>`;
+      membersEl.appendChild(chip);
+    }
+
+    const catEl = document.getElementById('categories');
+    catEl.innerHTML = '';
+    const sorted = Object.entries(summary.by_category).sort((a,b) => b[1]-a[1]);
+    if (sorted.length === 0) {
+      catEl.innerHTML = '<div class="muted">Пока нет расходов</div>';
+    }
+    for (const [cat, amt] of sorted) {
+      const row = document.createElement('div');
+      row.className = 'cat-row';
+      row.innerHTML = `<span>${cat}</span><span>${fmt(amt)} ₽</span>`;
+      catEl.appendChild(row);
+    }
+
+    document.getElementById('inviteBox').innerHTML =
+      `Код приглашения партнёра: <code>${summary.invite_code}</code>`;
+
+    const txs = await api(`/api/transactions?init_data=${encodeURIComponent(initData)}&limit=30`);
+    const txEl = document.getElementById('transactions');
+    txEl.innerHTML = '';
+    if (txs.length === 0) {
+      txEl.innerHTML = '<div class="muted">Пока нет операций</div>';
+    }
+    for (const t of txs) {
+      const div = document.createElement('div');
+      div.className = 'tx';
+      const name = t.first_name || t.username || 'Кто-то';
+      const sign = t.type === 'expense' ? '−' : '+';
+      div.innerHTML = `
+        <div class="left">
+          <div class="cat">${t.category}${t.comment ? ' · ' + t.comment : ''}</div>
+          <div class="meta">${name}</div>
+        </div>
+        <div class="amt ${t.type}">${sign}${fmt(t.amount)} ₽</div>
+      `;
+      txEl.appendChild(div);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function openSheet(type) {
+  currentType = type;
+  selectedCategory = null;
+  document.getElementById('sheetTitle').textContent = type === 'expense' ? 'Новый расход' : 'Новый доход';
+  document.getElementById('amountInput').value = '';
+  document.getElementById('commentInput').value = '';
+
+  const catButtons = document.getElementById('catButtons');
+  catButtons.innerHTML = '';
+  const cats = type === 'expense' ? categoriesList : ['Зарплата', 'Подарок', 'Прочее'];
+  for (const c of cats) {
+    const btn = document.createElement('div');
+    btn.className = 'cat-btn';
+    btn.textContent = c;
+    btn.onclick = () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedCategory = c;
+    };
+    catButtons.appendChild(btn);
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function closeOnOverlay(e) {
+  if (e.target.id === 'overlay') closeSheet();
+}
+
+async function submitTx() {
+  const amount = parseFloat(document.getElementById('amountInput').value);
+  if (!amount || amount <= 0) {
+    tg.showAlert('Введите сумму');
+    return;
+  }
+  const category = selectedCategory || 'Прочее';
+  const comment = document.getElementById('commentInput').value;
+
+  try {
+    await api('/api/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        init_data: initData,
+        amount, type: currentType, category, comment
+      })
+    });
+    closeSheet();
+    tg.HapticFeedback.notificationOccurred('success');
+    await loadData();
+  } catch (e) {
+    tg.showAlert('Не получилось сохранить операцию');
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
