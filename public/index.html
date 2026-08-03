@@ -21,12 +21,22 @@
     padding: 14px 14px 100px;
   }
 
-  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; }
   .topbar .icon-btn {
     width: 36px; height: 36px; border-radius: 12px; background: rgba(255,255,255,0.06);
     display:flex; align-items:center; justify-content:center; font-size: 16px; border: none; color: white;
   }
   .topbar .title { font-size: 17px; font-weight: 800; }
+
+  .period-row { display:flex; align-items:center; gap: 8px; margin-bottom: 12px; }
+  .period-nav { display:flex; align-items:center; gap: 4px; background: var(--card); border-radius: 12px; padding: 4px; flex: 1; }
+  .period-nav button { background:none; border:none; color:white; width: 28px; height: 28px; border-radius: 8px; font-size: 14px; }
+  .period-nav .label { flex:1; text-align:center; font-size: 12.5px; font-weight: 600; }
+  .period-all-btn {
+    background: var(--card); border: 1px solid transparent; color: var(--hint); border-radius: 12px;
+    padding: 0 12px; height: 36px; font-size: 12px; white-space: nowrap;
+  }
+  .period-all-btn.active { background: var(--purple); color: white; border-color: var(--purple); }
 
   .balance-card {
     background: radial-gradient(circle at 100% 0%, #3d2e8c 0%, transparent 55%),
@@ -98,7 +108,7 @@
   .storage-bal.negative { color: #ff6b81; }
   .storage-bal.positive { color: #5be08a; }
 
-  .tx-row { display:flex; align-items:center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tx-row { display:flex; align-items:center; gap: 8px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
   .tx-row:last-child { border-bottom: none; }
   .tx-icon { width: 38px; height: 38px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 16px; flex-shrink:0; background: rgba(255,255,255,0.06); }
   .tx-info { flex:1; min-width:0; }
@@ -107,7 +117,7 @@
   .tx-amt { font-weight: 700; font-size: 13.5px; white-space:nowrap; }
   .tx-amt.expense { color: #ff6b81; }
   .tx-amt.income { color: #5be08a; }
-  .tx-del { background:none; border:none; color: var(--hint); font-size: 15px; padding: 4px; opacity: 0.55; }
+  .tx-edit, .tx-del { background:none; border:none; color: var(--hint); font-size: 14px; padding: 4px; opacity: 0.6; }
 
   .invite-row { display:flex; align-items:center; justify-content:space-between; font-size: 12.5px; color: var(--hint); }
   .invite-row code { background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 8px; color: white; font-size: 13px; }
@@ -162,6 +172,15 @@
   <button class="icon-btn" onclick="showInvite()">☰</button>
   <div class="title">Wallet</div>
   <button class="icon-btn" onclick="loadData()">↻</button>
+</div>
+
+<div class="period-row">
+  <div class="period-nav">
+    <button onclick="shiftMonth(-1)">‹</button>
+    <div class="label" id="periodLabel">—</div>
+    <button onclick="shiftMonth(1)">›</button>
+  </div>
+  <button class="period-all-btn" id="periodAllBtn" onclick="togglePeriodAll()">Всё время</button>
 </div>
 
 <div class="balance-card" id="balanceCard">
@@ -259,7 +278,6 @@
 </div>
 
 <script>
-// Безопасная обёртка на случай, если Telegram WebApp API недоступен (например, открыто не из Telegram)
 const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : {
   ready: function () {}, expand: function () {},
   showAlert: function (msg) { alert(msg); },
@@ -279,9 +297,112 @@ let lastSummary = null;
 let lastTransactions = [];
 let isSubmitting = false;
 let currentModal = null;
+let editingId = null;
 const deletingIds = new Set();
 
+const now = new Date();
+let periodYear = now.getFullYear();
+let periodMonth = now.getMonth();
+let periodAll = false;
+
+const MONTH_NAMES = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTH_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+
+function getPeriodRange() {
+  if (periodAll) return { start: null, end: null };
+  const start = Math.floor(new Date(periodYear, periodMonth, 1, 0, 0, 0).getTime() / 1000);
+  const end = Math.floor(new Date(periodYear, periodMonth + 1, 0, 23, 59, 59).getTime() / 1000);
+  return { start: start, end: end };
+}
+
+function updatePeriodLabel() {
+  document.getElementById('periodLabel').textContent = periodAll
+    ? 'Всё время'
+    : MONTH_NAMES[periodMonth] + ' ' + periodYear;
+  document.getElementById('periodAllBtn').classList.toggle('active', periodAll);
+}
+
+function shiftMonth(delta) {
+  if (periodAll) {
+    periodAll = false;
+  } else {
+    periodMonth += delta;
+    if (periodMonth < 0) { periodMonth = 11; periodYear -= 1; }
+    if (periodMonth > 11) { periodMonth = 0; periodYear += 1; }
+  }
+  updatePeriodLabel();
+  loadData();
+}
+
+function togglePeriodAll() {
+  periodAll = !periodAll;
+  updatePeriodLabel();
+  loadData();
+}
+
 const ACCOUNT_ICONS = { 'Карта': '💳', 'Наличные': '💵', 'Валюта': '💱', 'Крипта': '₿', 'Другое': '📦' };
+
+async function fetchMonthlyTrends() {
+  const refNow = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(refNow.getFullYear(), refNow.getMonth() - i, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
+  const rangeStart = Math.floor(new Date(months[0].year, months[0].month, 1).getTime() / 1000);
+  const rangeEnd = Math.floor(new Date(months[5].year, months[5].month + 1, 0, 23, 59, 59).getTime() / 1000);
+
+  const txs = await api('/api/transactions?init_data=' + encodeURIComponent(initData) + '&limit=3000&start=' + rangeStart + '&end=' + rangeEnd);
+
+  const buckets = {};
+  months.forEach(function (m) { buckets[m.year + '-' + m.month] = { expense: 0, income: 0, label: MONTH_SHORT[m.month] }; });
+  txs.forEach(function (t) {
+    const d = new Date(t.created_at * 1000);
+    const key = d.getFullYear() + '-' + d.getMonth();
+    if (!buckets[key]) return;
+    const amt = Number(t.amount);
+    if (t.type === 'expense') buckets[key].expense += amt; else buckets[key].income += amt;
+  });
+  return months.map(function (m) { return buckets[m.year + '-' + m.month]; });
+}
+
+async function fetchWeeklyBreakdown(year, month) {
+  const start = Math.floor(new Date(year, month, 1).getTime() / 1000);
+  const end = Math.floor(new Date(year, month + 1, 0, 23, 59, 59).getTime() / 1000);
+  const txs = await api('/api/transactions?init_data=' + encodeURIComponent(initData) + '&limit=3000&start=' + start + '&end=' + end);
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const weekCount = Math.ceil(daysInMonth / 7);
+  const buckets = [];
+  for (let i = 0; i < weekCount; i++) buckets.push({ expense: 0, income: 0, label: (i + 1) + '-я нед.' });
+
+  txs.forEach(function (t) {
+    const d = new Date(t.created_at * 1000);
+    const idx = Math.min(Math.floor((d.getDate() - 1) / 7), weekCount - 1);
+    const amt = Number(t.amount);
+    if (t.type === 'expense') buckets[idx].expense += amt; else buckets[idx].income += amt;
+  });
+  return buckets;
+}
+
+function renderBarChart(container, buckets, maxHeightPx) {
+  maxHeightPx = maxHeightPx || 84;
+  const maxVal = Math.max.apply(null, buckets.map(function (b) { return Math.max(b.expense, b.income); }).concat([1]));
+  let html = '<div style="display:flex; align-items:flex-end; gap:6px; height:' + (maxHeightPx + 22) + 'px;">';
+  buckets.forEach(function (b) {
+    const expH = b.expense > 0 ? Math.max(3, Math.round((b.expense / maxVal) * maxHeightPx)) : 0;
+    const incH = b.income > 0 ? Math.max(3, Math.round((b.income / maxVal) * maxHeightPx)) : 0;
+    html += '<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">' +
+      '<div style="display:flex; align-items:flex-end; gap:2px; height:' + maxHeightPx + 'px;">' +
+      '<div style="width:8px; border-radius:3px 3px 0 0; background:#5be08a; height:' + incH + 'px;"></div>' +
+      '<div style="width:8px; border-radius:3px 3px 0 0; background:#ff6b81; height:' + expH + 'px;"></div>' +
+      '</div>' +
+      '<div style="font-size:9px; color:var(--hint); white-space:nowrap;">' + b.label + '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
 const COLORS = ['#7c5cff', '#3ea6ff', '#ffb84d', '#ff5ea8', '#5be08a', '#ff6b6b', '#4dd0e1', '#c084fc'];
 
 async function api(path, opts) {
@@ -303,13 +424,11 @@ function showInvite() {
   );
 }
 
-// ---- фон карточки баланса ----
 function applyBackground(url) {
   const card = document.getElementById('balanceCard');
   const house = document.getElementById('houseIcon');
   if (url) {
-    card.style.backgroundImage =
-      'linear-gradient(rgba(10,8,26,0.55), rgba(10,8,26,0.75)), url(' + url + ')';
+    card.style.backgroundImage = 'linear-gradient(rgba(10,8,26,0.55), rgba(10,8,26,0.75)), url(' + url + ')';
     house.style.display = 'none';
     document.getElementById('bgResetBtn').style.display = 'flex';
   } else {
@@ -318,10 +437,7 @@ function applyBackground(url) {
     document.getElementById('bgResetBtn').style.display = 'none';
   }
 }
-function pickBackground(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('bgFileInput').click();
-}
+function pickBackground(e) { if (e) e.stopPropagation(); document.getElementById('bgFileInput').click(); }
 function resetBackground(e) {
   if (e) e.stopPropagation();
   localStorage.removeItem('walletBgImage');
@@ -345,17 +461,20 @@ document.getElementById('bgFileInput').addEventListener('change', function (e) {
   } catch (e) { console.error(e); }
 })();
 
-// ---- загрузка данных ----
 async function loadData() {
   try {
-    const summary = await api('/api/summary?init_data=' + encodeURIComponent(initData));
+    const range = getPeriodRange();
+    let qs = 'init_data=' + encodeURIComponent(initData);
+    if (range.start != null) qs += '&start=' + range.start + '&end=' + range.end;
+
+    const summary = await api('/api/summary?' + qs);
     lastSummary = summary;
     categoriesList = summary.categories || categoriesList;
     accountsList = summary.accounts || accountsList;
 
-    document.getElementById('balance').textContent = fmt(summary.balance) + ' ₴';
+    document.getElementById('balance').textContent = fmt(summary.overall_balance != null ? summary.overall_balance : summary.balance) + ' ₴';
     document.getElementById('balanceSub').textContent =
-      'Доход ' + fmt(summary.total_income) + ' ₴ · Расход ' + fmt(summary.total_expense) + ' ₴';
+      (periodAll ? 'Доход ' : 'За период: доход ') + fmt(summary.total_income) + ' ₴ · Расход ' + fmt(summary.total_expense) + ' ₴';
     document.getElementById('inviteCode').textContent = summary.invite_code;
 
     const avatarRow = document.getElementById('avatarRow');
@@ -376,11 +495,12 @@ async function loadData() {
     renderStorageList(document.getElementById('storagePreview'), summary.by_account, false);
     renderMembers('members', summary.by_user, false);
 
-    const txs = await api('/api/transactions?init_data=' + encodeURIComponent(initData) + '&limit=100');
+    let txQs = 'init_data=' + encodeURIComponent(initData) + '&limit=200';
+    if (range.start != null) txQs += '&start=' + range.start + '&end=' + range.end;
+    const txs = await api('/api/transactions?' + txQs);
     lastTransactions = txs;
     renderTxList('transactionsPreview', txs.slice(0, 5));
 
-    // если модальное окно уже открыто — обновим и его содержимое
     if (currentModal) renderModalContent(currentModal);
   } catch (e) {
     console.error(e);
@@ -418,8 +538,7 @@ function renderDonut(byCategory, total) {
     paths = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>';
   } else {
     entries.forEach(function (entry, i) {
-      const amt = entry[1];
-      const len = (amt / total) * circumference;
+      const len = (entry[1] / total) * circumference;
       paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + COLORS[i % COLORS.length] + '" ' +
         'stroke-width="14" stroke-dasharray="' + len + ' ' + (circumference - len) + '" ' +
         'stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
@@ -477,7 +596,7 @@ function renderMembers(containerId, byUser, full) {
 function renderTxList(containerId, txs) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
-  if (!txs || txs.length === 0) { el.innerHTML = '<div class="empty">Пока нет операций</div>'; return; }
+  if (!txs || txs.length === 0) { el.innerHTML = '<div class="empty">Нет операций за этот период</div>'; return; }
   txs.forEach(function (t) {
     const row = document.createElement('div');
     row.className = 'tx-row';
@@ -489,7 +608,9 @@ function renderTxList(containerId, txs) {
       '<div class="tx-info"><div class="tx-cat">' + t.category + (t.comment ? ' · ' + t.comment : '') + '</div>' +
       '<div class="tx-meta">' + name + ' · ' + (t.account || 'Наличные') + '</div></div>' +
       '<div class="tx-amt ' + t.type + '">' + sign + fmt(t.amount) + ' ₴</div>' +
+      '<button class="tx-edit" data-id="' + t.id + '">✎</button>' +
       '<button class="tx-del" data-id="' + t.id + '">✕</button>';
+    row.querySelector('.tx-edit').addEventListener('click', function (e) { e.stopPropagation(); openSheet(t.type, t); });
     row.querySelector('.tx-del').addEventListener('click', function (e) { e.stopPropagation(); confirmDelete(t.id); });
     el.appendChild(row);
   });
@@ -514,21 +635,17 @@ function confirmDelete(id) {
   });
 }
 
-// ---- модальные окна: открываются сразу, содержимое подгружается/обновляется отдельно ----
 function openModal(name) {
   currentModal = name;
   document.getElementById('navHome').classList.remove('active');
-  document.getElementById('modalOverlay').classList.add('open'); // открываем сразу, без ожидания данных
+  document.getElementById('modalOverlay').classList.add('open');
   renderModalContent(name);
 }
 
 function renderModalContent(name) {
   const title = document.getElementById('modalTitle');
   const body = document.getElementById('modalBody');
-  if (!lastSummary) {
-    body.innerHTML = '<div class="empty">Загрузка…</div>';
-    return;
-  }
+  if (!lastSummary) { body.innerHTML = '<div class="empty">Загрузка…</div>'; return; }
   try {
     if (name === 'tx') {
       title.textContent = 'Все операции';
@@ -543,7 +660,7 @@ function renderModalContent(name) {
     } else if (name === 'storage') {
       title.textContent = 'Где хранятся деньги';
       body.innerHTML = '<div id="modalStorageList"></div>' +
-        '<div style="font-size:11.5px; color:var(--hint); margin-top:12px;">Баланс = сумма доходов минус сумма расходов, отмеченных для этого места хранения.</div>';
+        '<div style="font-size:11.5px; color:var(--hint); margin-top:12px;">Баланс = сумма доходов минус сумма расходов, отмеченных для этого места хранения (за всё время).</div>';
       renderStorageList(document.getElementById('modalStorageList'), lastSummary.by_account, true);
     }
   } catch (e) {
@@ -561,7 +678,15 @@ function renderModalAnalytics(body) {
     '<div style="height:1px; background:rgba(255,255,255,0.08); margin:16px 0;"></div>' +
     '<div style="font-size:13px; font-weight:700; margin-bottom:10px;">Доход vs расход</div>' +
     '<div class="leg-row"><div class="leg-dot" style="background:#5be08a"></div><div class="leg-name">Доход</div><div class="leg-amt">' + fmt(lastSummary.total_income) + ' ₴</div></div>' +
-    '<div class="leg-row"><div class="leg-dot" style="background:#ff6b81"></div><div class="leg-name">Расход</div><div class="leg-amt">' + fmt(lastSummary.total_expense) + ' ₴</div></div>';
+    '<div class="leg-row"><div class="leg-dot" style="background:#ff6b81"></div><div class="leg-name">Расход</div><div class="leg-amt">' + fmt(lastSummary.total_expense) + ' ₴</div></div>' +
+    '<div style="height:1px; background:rgba(255,255,255,0.08); margin:16px 0;"></div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+    '<div style="font-size:13px; font-weight:700;">По месяцам</div>' +
+    '<div style="font-size:10.5px; color:var(--hint);"><span style="color:#5be08a;">●</span> доход &nbsp; <span style="color:#ff6b81;">●</span> расход</div></div>' +
+    '<div id="monthlyTrendChart"><div class="empty">Загрузка…</div></div>' +
+    '<div style="height:1px; background:rgba(255,255,255,0.08); margin:16px 0;"></div>' +
+    '<div style="font-size:13px; font-weight:700; margin-bottom:10px;" id="weeklyTitle">По неделям</div>' +
+    '<div id="weeklyTrendChart"><div class="empty">Загрузка…</div></div>';
 
   const svg = document.getElementById('modalDonut');
   const entries = Object.entries(lastSummary.by_category).sort(function (a, b) { return b[1] - a[1]; });
@@ -582,6 +707,20 @@ function renderModalAnalytics(body) {
     '<text x="' + cx + '" y="' + (cy - 3) + '" text-anchor="middle" fill="white" font-size="15" font-weight="700">' + fmt(total || 0) + '</text>' +
     '<text x="' + cx + '" y="' + (cy + 13) + '" text-anchor="middle" fill="#8a8fa8" font-size="9">₴ расход</text>';
   renderLegend(document.getElementById('modalCatLegend'), Object.fromEntries(entries), total || 0);
+
+  const weekRefYear = periodAll ? now.getFullYear() : periodYear;
+  const weekRefMonth = periodAll ? now.getMonth() : periodMonth;
+  document.getElementById('weeklyTitle').textContent = 'По неделям — ' + MONTH_NAMES[weekRefMonth] + ' ' + weekRefYear;
+
+  fetchMonthlyTrends().then(function (buckets) {
+    const el = document.getElementById('monthlyTrendChart');
+    if (el) renderBarChart(el, buckets);
+  }).catch(function (e) { console.error(e); });
+
+  fetchWeeklyBreakdown(weekRefYear, weekRefMonth).then(function (buckets) {
+    const el = document.getElementById('weeklyTrendChart');
+    if (el) renderBarChart(el, buckets);
+  }).catch(function (e) { console.error(e); });
 }
 
 function renderModalFamily(body) {
@@ -600,7 +739,6 @@ function closeModal() {
 }
 function closeOnModalOverlay(e) { if (e.target.id === 'modalOverlay') closeModal(); }
 
-// ---- форма добавления: тоже открывается сразу ----
 function setType(type) {
   currentType = type;
   document.getElementById('typeExpenseBtn').className = 'type-btn' + (type === 'expense' ? ' sel-expense' : '');
@@ -608,14 +746,14 @@ function setType(type) {
   renderCatButtons();
 }
 
-function renderCatButtons() {
-  selectedCategory = null;
+function renderCatButtons(preselect) {
+  selectedCategory = preselect || null;
   const catButtons = document.getElementById('catButtons');
   catButtons.innerHTML = '';
   const cats = currentType === 'expense' ? categoriesList : ['Зарплата', 'Подарок', 'Прочее'];
   cats.forEach(function (c) {
     const btn = document.createElement('div');
-    btn.className = 'chip-btn';
+    btn.className = 'chip-btn' + (c === preselect ? ' selected' : '');
     btn.textContent = c;
     btn.onclick = function () {
       catButtons.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); });
@@ -626,14 +764,20 @@ function renderCatButtons() {
   });
 }
 
-function openSheet(type) {
-  document.getElementById('overlay').classList.add('open'); // открываем сразу
+function openSheet(type, txToEdit) {
+  editingId = txToEdit ? txToEdit.id : null;
+  document.getElementById('sheetTitle').textContent = editingId ? 'Изменить операцию' : 'Новая операция';
+  document.getElementById('submitBtn').textContent = editingId ? 'Сохранить' : 'Добавить';
+  document.getElementById('overlay').classList.add('open');
   try {
-    document.getElementById('amountInput').value = '';
-    document.getElementById('commentInput').value = '';
-    setType(type);
-    selectedAccount = accountsList[1] || accountsList[0];
+    document.getElementById('amountInput').value = txToEdit ? txToEdit.amount : '';
+    document.getElementById('commentInput').value = txToEdit ? (txToEdit.comment || '') : '';
+    currentType = type;
+    document.getElementById('typeExpenseBtn').className = 'type-btn' + (type === 'expense' ? ' sel-expense' : '');
+    document.getElementById('typeIncomeBtn').className = 'type-btn' + (type === 'income' ? ' sel-income' : '');
+    renderCatButtons(txToEdit ? txToEdit.category : null);
 
+    selectedAccount = txToEdit ? (txToEdit.account || accountsList[1]) : (accountsList[1] || accountsList[0]);
     const accButtons = document.getElementById('accButtons');
     accButtons.innerHTML = '';
     accountsList.forEach(function (a) {
@@ -649,7 +793,7 @@ function openSheet(type) {
     });
   } catch (e) { console.error(e); }
 }
-function closeSheet() { document.getElementById('overlay').classList.remove('open'); }
+function closeSheet() { document.getElementById('overlay').classList.remove('open'); editingId = null; }
 function closeOnOverlay(e) { if (e.target.id === 'overlay') closeSheet(); }
 
 async function submitTx() {
@@ -663,13 +807,20 @@ async function submitTx() {
   isSubmitting = true;
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.textContent = 'Добавляем…';
+  btn.textContent = editingId ? 'Сохраняем…' : 'Добавляем…';
 
   try {
-    await api('/api/transactions', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ init_data: initData, amount: amount, type: currentType, category: category, account: account, comment: comment })
-    });
+    if (editingId) {
+      await api('/api/transactions', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ init_data: initData, id: editingId, amount: amount, type: currentType, category: category, account: account, comment: comment })
+      });
+    } else {
+      await api('/api/transactions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ init_data: initData, amount: amount, type: currentType, category: category, account: account, comment: comment })
+      });
+    }
     closeSheet();
     tg.HapticFeedback.notificationOccurred('success');
     await loadData();
@@ -678,10 +829,11 @@ async function submitTx() {
   } finally {
     isSubmitting = false;
     btn.disabled = false;
-    btn.textContent = 'Добавить';
+    btn.textContent = editingId ? 'Сохранить' : 'Добавить';
   }
 }
 
+updatePeriodLabel();
 loadData();
 </script>
 </body>
