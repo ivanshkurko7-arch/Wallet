@@ -13,6 +13,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/link"
+  to = "/.netlify/functions/link"
+  status = 200
+
+[[redirects]]
   from = "/webhook"
   to = "/.netlify/functions/webhook"
   status = 200
