@@ -164,12 +164,160 @@
   .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
   .modal-head h2 { font-size: 17px; }
   .modal-close { background: rgba(255,255,255,0.08); border: none; color: white; width: 32px; height: 32px; border-radius: 10px; font-size: 15px; }
+
+  /* ===== Меню ===== */
+  .menu-item {
+    display:flex; align-items:center; gap: 12px; width: 100%; background: var(--card); border: none;
+    color: white; padding: 14px; border-radius: 14px; margin-bottom: 8px; font-size: 13.5px; font-family: inherit; text-align:left;
+  }
+  .menu-item .ic { font-size: 17px; width: 22px; text-align:center; flex-shrink:0; }
+  .menu-item .lb { flex:1; }
+  .menu-item .chev { color: var(--hint); font-size: 14px; }
+
+  /* ===== Сегментный переключатель (табы, тема) ===== */
+  .seg-toggle { display:flex; align-items:center; gap: 4px; background: var(--card); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
+  .seg-btn { flex:1; background:none; border:none; color: var(--hint); font-family: inherit; padding: 9px 4px; border-radius: 9px; font-size: 12.5px; font-weight: 600; text-align:center; }
+  .seg-btn.active { background: var(--purple); color: white; }
+
+  /* ===== Списки-настройки ===== */
+  .settings-group-label { font-size: 11px; color: var(--hint); text-transform: uppercase; letter-spacing: 0.03em; margin: 16px 0 8px; }
+  .settings-group-label:first-child { margin-top: 0; }
+  .list-row {
+    display:flex; align-items:center; gap: 10px; padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: none; border-left:none; border-right:none; border-top:none; width: 100%; color: white; font-family: inherit; text-align:left; font-size: 13.5px;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .lr-name { flex: 1; min-width: 0; }
+  .list-row .lr-sub { font-size: 11px; color: var(--hint); margin-top: 2px; }
+  .list-row .lr-val { color: var(--hint); font-size: 12.5px; }
+  .list-row .lr-chev { color: var(--hint); font-size: 13px; margin-left: 2px; }
+  .list-row input[type="time"] {
+    background: none; border: none; color: white; font-family: inherit; font-size: 13.5px; text-align: right;
+    color-scheme: dark;
+  }
+  .card-hint { font-size: 11.5px; color: var(--hint); margin-top: 8px; line-height: 1.4; }
+
+  .toggle-switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-switch .slider {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.14); border-radius: 999px; transition: 0.2s; cursor: pointer;
+  }
+  .toggle-switch .slider::before {
+    content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.2s;
+  }
+  .toggle-switch input:checked + .slider { background: var(--purple); }
+  .toggle-switch input:checked + .slider::before { transform: translateX(18px); }
+
+  /* ===== Категории ===== */
+  .cat-row { display:flex; align-items:center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); width:100%; background:none; border-left:none; border-right:none; border-top:none; color:white; font-family:inherit; text-align:left; }
+  .cat-row:last-child { border-bottom: none; }
+  .cat-icon { width: 36px; height: 36px; border-radius: 11px; background: rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .cat-name { flex: 1; font-size: 13.5px; min-width:0; }
+  .cat-tag { font-size: 9.5px; color: var(--hint); background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 6px; margin-right: 4px; white-space:nowrap; }
+  .cat-chev { color: var(--hint); font-size: 13px; }
+  .cat-count { text-align:center; font-size: 11.5px; color: var(--hint); margin: 12px 0 10px; }
+  .add-cat-btn {
+    width: 100%; padding: 13px; border: 1px dashed rgba(255,255,255,0.25); border-radius: 14px; background: none;
+    color: white; font-family: inherit; font-size: 13.5px; font-weight: 600;
+  }
+
+  /* ===== Бюджеты ===== */
+  .budget-row { padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.06); width:100%; background:none; border-left:none; border-right:none; border-top:none; color:white; font-family:inherit; text-align:left; }
+  .budget-row:last-child { border-bottom: none; }
+  .budget-top { display:flex; align-items:center; gap: 10px; }
+  .budget-top .cat-name { font-size: 13.5px; }
+  .budget-val { font-size: 12.5px; color: var(--hint); }
+  .budget-val.set { color: white; font-weight: 600; }
+  .budget-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); margin-top: 8px; margin-left: 46px; overflow:hidden; }
+  .budget-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--purple), var(--pink)); }
+  .budget-bar-fill.over { background: #ff6b81; }
+
+  /* ===== Промпт-шторка (редактирование категории/бюджета/таймзоны) ===== */
+  .prompt-overlay { z-index: 30; }
+  .icon-input-row { display:flex; gap: 10px; }
+  .icon-input-row input#promptIcon { width: 62px; text-align:center; font-size: 20px; flex-shrink:0; }
+
+  /* ===== Шорткат ===== */
+  .shortcut-hero { display:flex; gap: 12px; align-items:flex-start; background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+  .shortcut-hero .ic { width: 44px; height: 44px; border-radius: 13px; background: rgba(124,92,255,0.18); display:flex; align-items:center; justify-content:center; font-size: 20px; flex-shrink:0; }
+  .shortcut-hero h3 { font-size: 15px; margin-bottom: 3px; }
+  .shortcut-hero p { font-size: 12px; color: var(--hint); line-height: 1.4; }
+  .key-box { background: var(--card); border-radius: 14px; padding: 13px 14px; display:flex; align-items:center; gap: 10px; margin-bottom: 6px; }
+  .key-box code { flex:1; font-size: 12.5px; color: white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .key-copy-btn { background:none; border:none; color: var(--purple); font-weight: 700; font-size: 12.5px; white-space:nowrap; }
+  .step-row { display:flex; align-items:center; gap: 12px; background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--purple); color:white; font-size:11.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-text { font-size: 13px; flex:1; }
+  .invoke-row { display:flex; align-items:center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .invoke-row:last-child { border-bottom:none; }
+  .invoke-row .ic { font-size: 17px; width: 24px; text-align:center; flex-shrink:0; color: var(--hint); }
+  .invoke-row .txt strong { display:block; font-size: 13px; margin-bottom: 2px; }
+  .invoke-row .txt span { font-size: 11px; color: var(--hint); }
+
+  /* ===== Онбординг ===== */
+  .onboard-dots { display:flex; gap: 5px; }
+  .onboard-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.18); }
+  .onboard-dot.active { width: 16px; background: var(--purple); }
+  .onboard-illustration {
+    background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align:center;
+  }
+  .onboard-illustration .emoji { font-size: 34px; margin-bottom: 8px; }
+  .onboard-title { font-size: 16px; font-weight: 700; text-align:center; margin-bottom: 8px; }
+  .onboard-desc { font-size: 13px; color: var(--hint); text-align:center; line-height: 1.5; margin-bottom: 20px; }
+  .onboard-nav { display:flex; align-items:center; justify-content:space-between; }
+  .onboard-nav button { background:none; border:none; color: white; font-size: 13.5px; font-weight: 600; padding: 8px; }
+  .onboard-nav .skip { color: var(--hint); font-weight: 500; }
+
+  /* ===== Светлая тема ===== */
+  body.theme-light {
+    --bg: #f3f4f9; --text: #14141c; --hint: #6b7086; --card: rgba(20,20,45,0.055);
+  }
+  body.theme-light .sheet, body.theme-light .modal-box { background: #ffffff; border-color: rgba(0,0,0,0.06); }
+  body.theme-light .bottom-nav { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.06); }
+  body.theme-light .nav-item.active { color: var(--text); }
+  body.theme-light .sheet input, body.theme-light .type-btn, body.theme-light .chip-btn, body.theme-light .action-btn {
+    background: rgba(20,20,45,0.05); border-color: rgba(0,0,0,0.08); color: var(--text);
+  }
+  body.theme-light .icon-btn { background: rgba(20,20,45,0.06); color: var(--text); }
+  body.theme-light .sheet-close, body.theme-light .modal-close { background: rgba(20,20,45,0.07); color: var(--text); }
+  body.theme-light .list-row, body.theme-light .cat-row, body.theme-light .budget-row { border-bottom-color: rgba(0,0,0,0.06); }
+  body.theme-light .list-row input[type="time"] { color: var(--text); color-scheme: light; }
+  body.theme-light .cat-icon, body.theme-light .storage-icon, body.theme-light .step-row, body.theme-light .shortcut-hero, body.theme-light .key-box, body.theme-light .onboard-illustration {
+    background: rgba(20,20,45,0.05);
+  }
+
+  /* ===== Тост-уведомления об ошибках ===== */
+  .toast {
+    position: fixed; top: 14px; left: 14px; right: 14px; z-index: 60;
+    background: #3a1420; border: 1px solid rgba(255,107,129,0.35); color: #ffd7dd;
+    padding: 12px 14px; border-radius: 14px; font-size: 12.5px; display:flex; align-items:center; gap: 8px;
+    transform: translateY(-120%); transition: transform 0.25s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .toast.show { transform: translateY(0); }
+  .toast .t-close { margin-left:auto; background:none; border:none; color:#ffd7dd; font-size:13px; flex-shrink:0; }
+
+  /* ===== Поиск и фильтры операций ===== */
+  .tx-search { width: 100%; padding: 11px 13px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: white; font-size: 13.5px; margin-bottom: 10px; }
+  .tx-filter-row { display:flex; gap: 7px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 4px; }
+  .tx-filter-row::-webkit-scrollbar { display:none; }
+  .tx-chip { flex-shrink:0; padding: 7px 13px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: white; font-size: 12px; white-space:nowrap; }
+  .tx-chip.active { background: var(--purple); border-color: var(--purple); }
+  .load-more-btn { width:100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: white; font-family: inherit; font-size: 12.5px; margin-top: 8px; }
+
+  /* ===== Бюджеты на главной ===== */
+  .budget-warn-row { display:flex; align-items:center; gap: 10px; padding: 8px 0; }
+  .budget-warn-row .cat-name { font-size: 12.5px; }
+  .budget-warn-row .budget-val { font-size: 11.5px; }
+
+  /* ===== Перевод между счетами ===== */
+  .transfer-arrow { text-align:center; font-size: 18px; color: var(--hint); margin: -2px 0; }
 </style>
+
 </head>
 <body>
 
 <div class="topbar">
-  <button class="icon-btn" onclick="showInvite()">☰</button>
+  <button class="icon-btn" onclick="openMenu()">☰</button>
   <div class="title">Wallet</div>
   <button class="icon-btn" onclick="loadData()">↻</button>
 </div>
@@ -210,6 +358,11 @@
     <svg id="donutSvg" width="108" height="108" viewBox="0 0 108 108"></svg>
     <div class="donut-legend" id="categories"></div>
   </div>
+</button>
+
+<button class="section-card" id="budgetsPreviewCard" onclick="openModal('budgets')" style="display:none;">
+  <div class="section-head"><div class="h">Бюджеты этого месяца</div><div class="more">Все ></div></div>
+  <div id="budgetsPreview"></div>
 </button>
 
 <button class="section-card" onclick="openModal('family')">
@@ -264,6 +417,9 @@
     </div>
     <input type="number" inputmode="decimal" id="amountInput" placeholder="Сумма, ₴">
 
+    <label>Дата и время</label>
+    <input type="datetime-local" id="dtInput">
+
     <label>Категория</label>
     <div class="chip-group" id="catButtons"></div>
 
@@ -274,6 +430,71 @@
     <input type="text" id="commentInput" placeholder="Например: обед с коллегами">
 
     <button class="submit-btn" id="submitBtn" onclick="submitTx()">Добавить</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button class="t-close" onclick="hideToast()">✕</button></div>
+
+<div class="sheet-overlay" id="transferOverlay" onclick="closeOnTransferOverlay(event)">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>Перевод между счетами</h2>
+      <button class="sheet-close" onclick="closeTransferSheet()">✕</button>
+    </div>
+    <input type="number" inputmode="decimal" id="transferAmount" placeholder="Сумма, ₴">
+    <label>Откуда</label>
+    <div class="chip-group" id="transferFromButtons"></div>
+    <div class="transfer-arrow">↓</div>
+    <label>Куда</label>
+    <div class="chip-group" id="transferToButtons"></div>
+    <label>Комментарий (необязательно)</label>
+    <input type="text" id="transferComment" placeholder="Например: снял наличные">
+    <button class="submit-btn" id="transferSubmitBtn" onclick="submitTransfer()">Перевести</button>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="menuOverlay" onclick="closeOnMenuOverlay(event)">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>Меню</h2>
+      <button class="sheet-close" onclick="closeMenu()">✕</button>
+    </div>
+    <div style="margin-top: 14px;">
+      <button class="menu-item" onclick="closeMenu(); openModal('categories')"><span class="ic">🏷️</span><span class="lb">Категории</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('accounts')"><span class="ic">🏦</span><span class="lb">Счета</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openTransferSheet()"><span class="ic">🔁</span><span class="lb">Перевод между счетами</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('budgets')"><span class="ic">📊</span><span class="lb">Бюджеты</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('shortcut')"><span class="ic">⚡</span><span class="lb">Быстрый ввод</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('settings')"><span class="ic">⚙️</span><span class="lb">Настройки</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); startOnboarding()"><span class="ic">💡</span><span class="lb">Как пользоваться</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); showInvite()"><span class="ic">🔗</span><span class="lb">Пригласить партнёра</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openJoinPrompt()"><span class="ic">🔑</span><span class="lb">Ввести код партнёра</span><span class="chev">›</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-overlay prompt-overlay" id="promptOverlay" onclick="closeOnPromptOverlay(event)">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="promptTitle">—</h2>
+      <button class="sheet-close" onclick="closePrompt()">✕</button>
+    </div>
+    <div id="promptBody"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="onboardOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>Главная</h2>
+      <button class="sheet-close" onclick="finishOnboarding()">✕</button>
+    </div>
+    <div id="onboardBody" style="margin-top: 10px;"></div>
+    <div class="onboard-nav">
+      <button class="skip" id="onboardBackBtn" onclick="onboardStep(-1)">‹ Назад</button>
+      <div class="onboard-dots" id="onboardDots"></div>
+      <button id="onboardNextBtn" onclick="onboardStep(1)">Далее</button>
+    </div>
   </div>
 </div>
 
@@ -299,6 +520,109 @@ let isSubmitting = false;
 let currentModal = null;
 let editingId = null;
 const deletingIds = new Set();
+let accountsSeeded = false;
+
+/* ===== Категории / бюджеты / настройки (хранятся локально на устройстве) ===== */
+const DEFAULT_EXPENSE_CATEGORIES = [
+  { name: 'Еда', icon: '🍔', system: false },
+  { name: 'Транспорт', icon: '🚕', system: false },
+  { name: 'Жильё', icon: '🏠', system: false },
+  { name: 'Развлечения', icon: '🎬', system: false },
+  { name: 'Здоровье', icon: '💊', system: false },
+  { name: 'Одежда', icon: '👕', system: false },
+  { name: 'Подписки', icon: '🔁', system: false },
+  { name: 'Прочее', icon: '📦', system: true }
+];
+const DEFAULT_INCOME_CATEGORIES = [
+  { name: 'Зарплата', icon: '💰', system: false },
+  { name: 'Подработка', icon: '🛠️', system: false },
+  { name: 'Переводы и подарки', icon: '🤝', system: false },
+  { name: 'Прочие доходы', icon: '🎁', system: true }
+];
+const DEFAULT_ACCOUNTS = [
+  { name: 'Карта', icon: '💳', system: false },
+  { name: 'Наличные', icon: '💵', system: true },
+  { name: 'Валюта', icon: '💱', system: false },
+  { name: 'Крипта', icon: '₿', system: false },
+  { name: 'Другое', icon: '📦', system: false }
+];
+const CATEGORY_LIMIT = 50;
+
+function loadJSON(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { console.error(e); } }
+
+let expenseCategories = loadJSON('walletExpenseCategories', DEFAULT_EXPENSE_CATEGORIES);
+let incomeCategories = loadJSON('walletIncomeCategories', DEFAULT_INCOME_CATEGORIES);
+let accounts = loadJSON('walletAccounts', null);
+let accountsWereLocal = !!accounts;
+if (!accounts) accounts = DEFAULT_ACCOUNTS.slice();
+let budgets = loadJSON('walletBudgets', {});
+let walletTheme = localStorage.getItem('walletTheme') || 'system';
+let walletTimezone = localStorage.getItem('walletTimezone') || 'Europe/Kiev|UTC+3';
+let reminderEnabled = localStorage.getItem('walletReminderEnabled') !== '0';
+let reminderTime = localStorage.getItem('walletReminderTime') || '20:00';
+let shortcutKey = localStorage.getItem('walletShortcutKey');
+if (!shortcutKey) {
+  shortcutKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
+    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16);
+    });
+  localStorage.setItem('walletShortcutKey', shortcutKey);
+}
+let promptMode = null;
+let promptEditingIndex = null;
+
+const TIMEZONE_OPTIONS = [
+  { id: 'Europe/Kaliningrad|UTC+2', label: 'Калининград · UTC+2' },
+  { id: 'Europe/Kiev|UTC+3', label: 'Киев · UTC+3' },
+  { id: 'Europe/Moscow|UTC+3', label: 'Москва · UTC+3' },
+  { id: 'Europe/Samara|UTC+4', label: 'Самара · UTC+4' },
+  { id: 'Asia/Yekaterinburg|UTC+5', label: 'Екатеринбург · UTC+5' },
+  { id: 'Asia/Almaty|UTC+6', label: 'Алматы · UTC+6' },
+  { id: 'Asia/Krasnoyarsk|UTC+7', label: 'Красноярск · UTC+7' },
+  { id: 'Asia/Vladivostok|UTC+10', label: 'Владивосток · UTC+10' }
+];
+
+function syncCategoriesList() { categoriesList = expenseCategories.map(function (c) { return c.name; }); }
+syncCategoriesList();
+function syncAccountsList() { accountsList = accounts.map(function (a) { return a.name; }); }
+syncAccountsList();
+function accIcon(name) {
+  const found = accounts.find(function (a) { return a.name === name; });
+  return found ? found.icon : '📦';
+}
+function persistAccounts() { saveJSON('walletAccounts', accounts); syncAccountsList(); }
+
+function applyTheme() {
+  document.body.classList.remove('theme-light');
+  let useLight = false;
+  if (walletTheme === 'light') useLight = true;
+  else if (walletTheme === 'system') {
+    useLight = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+  }
+  if (useLight) document.body.classList.add('theme-light');
+}
+applyTheme();
+if (window.matchMedia) {
+  try {
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function () {
+      if (walletTheme === 'system') applyTheme();
+    });
+  } catch (e) { /* older browsers */ }
+}
+
+/* ===== Тост-уведомления ===== */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 4500);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
 
 const now = new Date();
 let periodYear = now.getFullYear();
@@ -340,7 +664,6 @@ function togglePeriodAll() {
   loadData();
 }
 
-const ACCOUNT_ICONS = { 'Карта': '💳', 'Наличные': '💵', 'Валюта': '💱', 'Крипта': '₿', 'Другое': '📦' };
 
 async function fetchMonthlyTrends() {
   const refNow = new Date();
@@ -469,8 +792,14 @@ async function loadData() {
 
     const summary = await api('/api/summary?' + qs);
     lastSummary = summary;
-    categoriesList = summary.categories || categoriesList;
-    accountsList = summary.accounts || accountsList;
+    if (!accountsWereLocal && summary.accounts && summary.accounts.length) {
+      accounts = summary.accounts.map(function (name) {
+        const def = DEFAULT_ACCOUNTS.find(function (d) { return d.name === name; });
+        return { name: name, icon: def ? def.icon : '📦', system: false };
+      });
+      persistAccounts();
+      accountsWereLocal = true;
+    }
 
     document.getElementById('balance').textContent = fmt(summary.overall_balance != null ? summary.overall_balance : summary.balance) + ' ₴';
     document.getElementById('balanceSub').textContent =
@@ -502,9 +831,49 @@ async function loadData() {
     renderTxList('transactionsPreview', txs.slice(0, 5));
 
     if (currentModal) renderModalContent(currentModal);
+    maybeStartOnboarding();
+    refreshBudgetsPreview();
   } catch (e) {
     console.error(e);
+    showToast('Не удалось обновить данные. Проверьте соединение и потяните вниз для обновления.');
   }
+}
+
+async function refreshBudgetsPreview() {
+  const card = document.getElementById('budgetsPreviewCard');
+  const keys = Object.keys(budgets);
+  if (!keys.length) { card.style.display = 'none'; return; }
+  try {
+    const byCat = await fetchCurrentMonthByCategory();
+    const preview = document.getElementById('budgetsPreview');
+    preview.innerHTML = '';
+    keys.slice(0, 4).forEach(function (name) {
+      const limit = budgets[name];
+      const spent = byCat[name] || 0;
+      const c = expenseCategories.find(function (x) { return x.name === name; });
+      const pct = Math.min(100, Math.round((spent / limit) * 100));
+      const row = document.createElement('div');
+      row.className = 'budget-row';
+      row.innerHTML =
+        '<div class="budget-top">' +
+        '<div class="cat-icon">' + (c ? c.icon : '🏷️') + '</div>' +
+        '<div class="cat-name">' + name + '</div>' +
+        '<div class="budget-val set">' + fmt(spent) + ' / ' + fmt(limit) + ' ₴</div>' +
+        '</div>' +
+        '<div class="budget-bar"><div class="budget-bar-fill' + (spent > limit ? ' over' : '') + '" style="width:' + pct + '%"></div></div>';
+      preview.appendChild(row);
+    });
+    card.style.display = 'block';
+  } catch (e) {
+    console.error(e);
+    card.style.display = 'none';
+  }
+}
+
+function maybeStartOnboarding() {
+  if (localStorage.getItem('walletOnboardingSeen') === '1') return;
+  if (document.getElementById('overlay').classList.contains('open')) return;
+  startOnboarding();
 }
 
 function renderStorageList(el, byAccount, full) {
@@ -519,7 +888,7 @@ function renderStorageList(el, byAccount, full) {
     const row = document.createElement('div');
     row.className = 'storage-row';
     row.innerHTML =
-      '<div class="storage-icon">' + (ACCOUNT_ICONS[name] || '📦') + '</div>' +
+      '<div class="storage-icon">' + accIcon(name) + '</div>' +
       '<div class="storage-name">' + name + '</div>' +
       '<div class="storage-bal ' + (balance < 0 ? 'negative' : 'positive') + '">' +
       (balance >= 0 ? '+' : '') + fmt(balance) + ' ₴</div>';
@@ -600,20 +969,150 @@ function renderTxList(containerId, txs) {
   txs.forEach(function (t) {
     const row = document.createElement('div');
     row.className = 'tx-row';
+    row.style.cursor = 'pointer';
     const name = t.first_name || t.username || 'Кто-то';
     const sign = t.type === 'expense' ? '−' : '+';
-    const icon = t.type === 'expense' ? (ACCOUNT_ICONS[t.account] || '💸') : '💰';
+    const icon = t.type === 'expense' ? (t.account ? accIcon(t.account) : '💸') : '💰';
     row.innerHTML =
       '<div class="tx-icon">' + icon + '</div>' +
       '<div class="tx-info"><div class="tx-cat">' + t.category + (t.comment ? ' · ' + t.comment : '') + '</div>' +
-      '<div class="tx-meta">' + name + ' · ' + (t.account || 'Наличные') + '</div></div>' +
+      '<div class="tx-meta">' + name + ' · ' + (t.account || 'Наличные') + ' · ' + fmtShortDateTime(t.created_at) + '</div></div>' +
       '<div class="tx-amt ' + t.type + '">' + sign + fmt(t.amount) + ' ₴</div>' +
       '<button class="tx-edit" data-id="' + t.id + '">✎</button>' +
       '<button class="tx-del" data-id="' + t.id + '">✕</button>';
     row.querySelector('.tx-edit').addEventListener('click', function (e) { e.stopPropagation(); openSheet(t.type, t); });
     row.querySelector('.tx-del').addEventListener('click', function (e) { e.stopPropagation(); confirmDelete(t.id); });
+    row.addEventListener('click', function () { openTxDetail(t); });
     el.appendChild(row);
   });
+}
+
+function fmtShortDateTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts * 1000);
+  const now3 = new Date();
+  const sameYear = d.getFullYear() === now3.getFullYear();
+  const dateStr = d.toLocaleDateString('ru-RU', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
+  const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  return dateStr + ', ' + timeStr;
+}
+
+function openTxDetail(t) {
+  window.__txDetailRef = t;
+  promptMode = 'txDetail';
+  promptEditingIndex = null;
+  const d = new Date(t.created_at * 1000);
+  const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const name = t.first_name || t.username || 'Кто-то';
+  const sign = t.type === 'expense' ? '−' : '+';
+  document.getElementById('promptTitle').textContent = t.type === 'expense' ? 'Расход' : 'Доход';
+  document.getElementById('promptBody').innerHTML =
+    '<div class="list-row"><div class="lr-name">Тип операции</div><div class="lr-val">' + (t.type === 'expense' ? '📤 Расход' : '📥 Доход') + '</div></div>' +
+    '<div class="list-row"><div class="lr-name">Дата</div><div class="lr-val">' + dateStr + '</div></div>' +
+    '<div class="list-row"><div class="lr-name">Время</div><div class="lr-val">' + timeStr + '</div></div>' +
+    '<div class="list-row"><div class="lr-name">Категория</div><div class="lr-val">' + t.category + '</div></div>' +
+    '<div class="list-row"><div class="lr-name">Счёт</div><div class="lr-val">' + (t.account || 'Наличные') + '</div></div>' +
+    '<div class="list-row"><div class="lr-name">Сумма</div><div class="lr-val">' + sign + fmt(t.amount) + ' ₴</div></div>' +
+    '<div class="list-row"><div class="lr-name">Кто добавил</div><div class="lr-val">' + name + '</div></div>' +
+    (t.comment ? '<div class="list-row"><div class="lr-name">Комментарий</div><div class="lr-val">' + t.comment + '</div></div>' : '') +
+    '<button class="submit-btn" style="margin-top:16px;" onclick="closePrompt(); openSheet(window.__txDetailRef.type, window.__txDetailRef)">Изменить</button>' +
+    '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="closePrompt(); confirmDelete(window.__txDetailRef.id)">Удалить операцию</button>';
+  openPrompt();
+}
+
+/* ===== Поиск, фильтры и подгрузка в "Все операции" ===== */
+let txModalExtra = [];
+let txQuery = '';
+let txTypeFilter = 'all';
+let txAccountFilter = 'all';
+let txHasMore = true;
+
+function resetTxFilters() {
+  txModalExtra = [];
+  txQuery = '';
+  txTypeFilter = 'all';
+  txAccountFilter = 'all';
+  txHasMore = true;
+}
+
+function combinedTxList() { return lastTransactions.concat(txModalExtra); }
+
+function filteredTxList() {
+  const q = txQuery.trim().toLowerCase();
+  return combinedTxList().filter(function (t) {
+    if (txTypeFilter !== 'all' && t.type !== txTypeFilter) return false;
+    if (txAccountFilter !== 'all' && (t.account || 'Наличные') !== txAccountFilter) return false;
+    if (q) {
+      const hay = (t.category + ' ' + (t.comment || '') + ' ' + (t.first_name || '') + ' ' + (t.username || '')).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function renderTxModal(body) {
+  const accChips = accountsList.map(function (a) {
+    return '<button class="tx-chip' + (txAccountFilter === a ? ' active' : '') + '" data-acc="' + a + '">' + accIcon(a) + ' ' + a + '</button>';
+  }).join('');
+  body.innerHTML =
+    '<input type="text" class="tx-search" id="txSearchInput" placeholder="Поиск по категории, комментарию, автору" value="' + txQuery + '">' +
+    '<div class="tx-filter-row" id="txTypeRow">' +
+    '<button class="tx-chip' + (txTypeFilter === 'all' ? ' active' : '') + '" data-type="all">Все</button>' +
+    '<button class="tx-chip' + (txTypeFilter === 'expense' ? ' active' : '') + '" data-type="expense">Расходы</button>' +
+    '<button class="tx-chip' + (txTypeFilter === 'income' ? ' active' : '') + '" data-type="income">Доходы</button>' +
+    '</div>' +
+    '<div class="tx-filter-row" id="txAccRow"><button class="tx-chip' + (txAccountFilter === 'all' ? ' active' : '') + '" data-acc="all">Все счета</button>' + accChips + '</div>' +
+    '<div id="modalTxList"></div>' +
+    '<button class="load-more-btn" id="txLoadMoreBtn" onclick="loadMoreTx()">Загрузить ещё</button>';
+
+  document.getElementById('txSearchInput').addEventListener('input', function (e) {
+    txQuery = e.target.value;
+    renderTxListFiltered();
+  });
+  document.getElementById('txTypeRow').addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-type]');
+    if (!btn) return;
+    txTypeFilter = btn.dataset.type;
+    renderTxModal(body);
+  });
+  document.getElementById('txAccRow').addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-acc]');
+    if (!btn) return;
+    txAccountFilter = btn.dataset.acc;
+    renderTxModal(body);
+  });
+
+  renderTxListFiltered();
+}
+
+function renderTxListFiltered() {
+  const list = filteredTxList();
+  renderTxList('modalTxList', list);
+  const btn = document.getElementById('txLoadMoreBtn');
+  if (btn) btn.style.display = txHasMore ? 'block' : 'none';
+}
+
+async function loadMoreTx() {
+  const btn = document.getElementById('txLoadMoreBtn');
+  const combined = combinedTxList();
+  if (!combined.length) { txHasMore = false; if (btn) btn.style.display = 'none'; return; }
+  const oldest = combined.reduce(function (min, t) { return t.created_at < min ? t.created_at : min; }, combined[0].created_at);
+  if (btn) { btn.disabled = true; btn.textContent = 'Загрузка…'; }
+  try {
+    const range = getPeriodRange();
+    let qs = 'init_data=' + encodeURIComponent(initData) + '&limit=200&end=' + (oldest - 1);
+    if (range.start != null) qs += '&start=' + range.start;
+    const more = await api('/api/transactions?' + qs);
+    if (!more.length) { txHasMore = false; }
+    else { txModalExtra = txModalExtra.concat(more); if (more.length < 200) txHasMore = false; }
+    renderTxListFiltered();
+  } catch (e) {
+    console.error(e);
+    showToast('Не удалось загрузить дополнительные операции');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Загрузить ещё'; }
+  }
 }
 
 function confirmDelete(id) {
@@ -649,8 +1148,8 @@ function renderModalContent(name) {
   try {
     if (name === 'tx') {
       title.textContent = 'Все операции';
-      body.innerHTML = '<div id="modalTxList"></div>';
-      renderTxList('modalTxList', lastTransactions);
+      resetTxFilters();
+      renderTxModal(body);
     } else if (name === 'analytics') {
       title.textContent = 'Аналитика расходов';
       renderModalAnalytics(body);
@@ -662,6 +1161,21 @@ function renderModalContent(name) {
       body.innerHTML = '<div id="modalStorageList"></div>' +
         '<div style="font-size:11.5px; color:var(--hint); margin-top:12px;">Баланс = сумма доходов минус сумма расходов, отмеченных для этого места хранения (за всё время).</div>';
       renderStorageList(document.getElementById('modalStorageList'), lastSummary.by_account, true);
+    } else if (name === 'categories') {
+      title.textContent = 'Категории';
+      renderCategoriesModal(body);
+    } else if (name === 'accounts') {
+      title.textContent = 'Счета';
+      renderAccountsModal(body);
+    } else if (name === 'budgets') {
+      title.textContent = 'Бюджеты';
+      renderBudgetsModal(body);
+    } else if (name === 'shortcut') {
+      title.textContent = 'Шорткат';
+      renderShortcutModal(body);
+    } else if (name === 'settings') {
+      title.textContent = 'Настройки';
+      renderSettingsModal(body);
     }
   } catch (e) {
     console.error(e);
@@ -750,7 +1264,7 @@ function renderCatButtons(preselect) {
   selectedCategory = preselect || null;
   const catButtons = document.getElementById('catButtons');
   catButtons.innerHTML = '';
-  const cats = currentType === 'expense' ? categoriesList : ['Зарплата', 'Подарок', 'Прочее'];
+  const cats = (currentType === 'expense' ? expenseCategories : incomeCategories).map(function (c) { return c.name; });
   cats.forEach(function (c) {
     const btn = document.createElement('div');
     btn.className = 'chip-btn' + (c === preselect ? ' selected' : '');
@@ -772,6 +1286,7 @@ function openSheet(type, txToEdit) {
   try {
     document.getElementById('amountInput').value = txToEdit ? txToEdit.amount : '';
     document.getElementById('commentInput').value = txToEdit ? (txToEdit.comment || '') : '';
+    document.getElementById('dtInput').value = toDatetimeLocalValue(txToEdit ? txToEdit.created_at : Math.floor(Date.now() / 1000));
     currentType = type;
     document.getElementById('typeExpenseBtn').className = 'type-btn' + (type === 'expense' ? ' sel-expense' : '');
     document.getElementById('typeIncomeBtn').className = 'type-btn' + (type === 'income' ? ' sel-income' : '');
@@ -783,7 +1298,7 @@ function openSheet(type, txToEdit) {
     accountsList.forEach(function (a) {
       const btn = document.createElement('div');
       btn.className = 'chip-btn' + (a === selectedAccount ? ' selected' : '');
-      btn.textContent = (ACCOUNT_ICONS[a] || '') + ' ' + a;
+      btn.textContent = accIcon(a) + ' ' + a;
       btn.onclick = function () {
         accButtons.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
@@ -796,6 +1311,17 @@ function openSheet(type, txToEdit) {
 function closeSheet() { document.getElementById('overlay').classList.remove('open'); editingId = null; }
 function closeOnOverlay(e) { if (e.target.id === 'overlay') closeSheet(); }
 
+function toDatetimeLocalValue(ts) {
+  const d = new Date(ts * 1000);
+  const pad = function (n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function fromDatetimeLocalValue(str) {
+  if (!str) return Math.floor(Date.now() / 1000);
+  const d = new Date(str);
+  return Math.floor(d.getTime() / 1000);
+}
+
 async function submitTx() {
   if (isSubmitting) return;
   const amount = parseFloat(document.getElementById('amountInput').value);
@@ -803,6 +1329,7 @@ async function submitTx() {
   const category = selectedCategory || 'Прочее';
   const account = selectedAccount || 'Наличные';
   const comment = document.getElementById('commentInput').value;
+  const createdAt = fromDatetimeLocalValue(document.getElementById('dtInput').value);
 
   isSubmitting = true;
   const btn = document.getElementById('submitBtn');
@@ -813,12 +1340,12 @@ async function submitTx() {
     if (editingId) {
       await api('/api/transactions', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ init_data: initData, id: editingId, amount: amount, type: currentType, category: category, account: account, comment: comment })
+        body: JSON.stringify({ init_data: initData, id: editingId, amount: amount, type: currentType, category: category, account: account, comment: comment, created_at: createdAt })
       });
     } else {
       await api('/api/transactions', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ init_data: initData, amount: amount, type: currentType, category: category, account: account, comment: comment })
+        body: JSON.stringify({ init_data: initData, amount: amount, type: currentType, category: category, account: account, comment: comment, created_at: createdAt })
       });
     }
     closeSheet();
@@ -830,6 +1357,498 @@ async function submitTx() {
     isSubmitting = false;
     btn.disabled = false;
     btn.textContent = editingId ? 'Сохранить' : 'Добавить';
+  }
+}
+
+/* ===== Меню ===== */
+function openMenu() { document.getElementById('menuOverlay').classList.add('open'); }
+function closeMenu() { document.getElementById('menuOverlay').classList.remove('open'); }
+function closeOnMenuOverlay(e) { if (e.target.id === 'menuOverlay') closeMenu(); }
+
+/* ===== Категории ===== */
+function renderCategoriesModal(body) {
+  body.innerHTML =
+    '<div class="seg-toggle">' +
+    '<button class="seg-btn" id="catTabExpense">Траты</button>' +
+    '<button class="seg-btn" id="catTabIncome">Доходы</button>' +
+    '</div>' +
+    '<div id="catList"></div>' +
+    '<div class="cat-count" id="catCount"></div>' +
+    '<button class="add-cat-btn" onclick="openCategoryPrompt(null)">+ Новая категория</button>';
+  document.getElementById('catTabExpense').onclick = function () { renderCatTab('expense'); };
+  document.getElementById('catTabIncome').onclick = function () { renderCatTab('income'); };
+  renderCatTab(window.__catTab || 'expense');
+}
+function renderCatTab(tab) {
+  window.__catTab = tab;
+  document.getElementById('catTabExpense').classList.toggle('active', tab === 'expense');
+  document.getElementById('catTabIncome').classList.toggle('active', tab === 'income');
+  const list = tab === 'expense' ? expenseCategories : incomeCategories;
+  const listEl = document.getElementById('catList');
+  listEl.innerHTML = '';
+  list.forEach(function (c, i) {
+    const row = document.createElement('button');
+    row.className = 'cat-row';
+    row.innerHTML =
+      '<div class="cat-icon">' + (c.icon || '🏷️') + '</div>' +
+      '<div class="cat-name">' + c.name + '</div>' +
+      (c.system ? '<div class="cat-tag">системная</div>' : '') +
+      '<div class="cat-chev">›</div>';
+    row.onclick = function () {
+      if (c.system) { tg.showAlert('Это системная категория. Её нельзя переименовать или удалить.'); return; }
+      openCategoryPrompt({ type: tab, index: i });
+    };
+    listEl.appendChild(row);
+  });
+  document.getElementById('catCount').textContent = list.length + ' / ' + CATEGORY_LIMIT;
+}
+
+function openCategoryPrompt(editing) {
+  promptMode = 'category';
+  promptEditingIndex = editing;
+  const tab = editing ? editing.type : (window.__catTab || 'expense');
+  const list = tab === 'expense' ? expenseCategories : incomeCategories;
+  const item = editing ? list[editing.index] : null;
+  document.getElementById('promptTitle').textContent = editing ? 'Изменить категорию' : 'Новая категория';
+  document.getElementById('promptBody').innerHTML =
+    '<div class="icon-input-row">' +
+    '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '🏷️') + '">' +
+    '<input type="text" id="promptName" placeholder="Например: Спорт" value="' + (item ? item.name : '') + '" style="flex:1;">' +
+    '</div>' +
+    '<button class="submit-btn" onclick="savePromptCategory()">Сохранить</button>' +
+    (item && !item.system ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptCategory()">Удалить категорию</button>' : '');
+  openPrompt();
+}
+function savePromptCategory() {
+  const tab = promptEditingIndex ? promptEditingIndex.type : (window.__catTab || 'expense');
+  const list = tab === 'expense' ? expenseCategories : incomeCategories;
+  const icon = document.getElementById('promptIcon').value.trim() || '🏷️';
+  const name = document.getElementById('promptName').value.trim();
+  if (!name) { tg.showAlert('Введите название категории'); return; }
+  if (promptEditingIndex) {
+    list[promptEditingIndex.index].name = name;
+    list[promptEditingIndex.index].icon = icon;
+  } else {
+    if (list.length >= CATEGORY_LIMIT) { tg.showAlert('Достигнут лимит категорий (' + CATEGORY_LIMIT + ')'); return; }
+    const systemIdx = list.findIndex(function (c) { return c.system; });
+    const newItem = { name: name, icon: icon, system: false };
+    if (systemIdx >= 0) list.splice(systemIdx, 0, newItem); else list.push(newItem);
+  }
+  persistCategories(tab);
+  closePrompt();
+  renderCatTab(tab);
+  tg.HapticFeedback.notificationOccurred('success');
+}
+function deletePromptCategory() {
+  const tab = promptEditingIndex.type;
+  const list = tab === 'expense' ? expenseCategories : incomeCategories;
+  const catName = list[promptEditingIndex.index].name;
+  countCategoryUsage(catName).then(function (count) {
+    const msg = count > 0
+      ? 'У категории «' + catName + '» уже есть ' + count + ' ' + pluralOps(count) + '. Они останутся в истории с этим названием, но выбрать эту категорию для новых операций будет нельзя. Удалить категорию?'
+      : 'Удалить эту категорию?';
+    tg.showConfirm(msg, function (ok) {
+      if (!ok) return;
+      list.splice(promptEditingIndex.index, 1);
+      persistCategories(tab);
+      closePrompt();
+      renderCatTab(tab);
+    });
+  });
+}
+function pluralOps(n) {
+  const n10 = n % 10, n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return 'операция';
+  if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'операции';
+  return 'операций';
+}
+async function countCategoryUsage(catName) {
+  try {
+    const txs = await api('/api/transactions?init_data=' + encodeURIComponent(initData) + '&limit=3000');
+    return txs.filter(function (t) { return t.category === catName; }).length;
+  } catch (e) { return 0; }
+}
+function persistCategories(tab) {
+  if (tab === 'expense') { saveJSON('walletExpenseCategories', expenseCategories); syncCategoriesList(); }
+  else { saveJSON('walletIncomeCategories', incomeCategories); }
+}
+
+/* ===== Счета ===== */
+function renderAccountsModal(body) {
+  body.innerHTML = '<div id="accList"></div>' +
+    '<div class="cat-count" id="accCount"></div>' +
+    '<button class="add-cat-btn" onclick="openAccountPrompt(null)">+ Новый счёт</button>';
+  renderAccList();
+}
+function renderAccList() {
+  const listEl = document.getElementById('accList');
+  listEl.innerHTML = '';
+  accounts.forEach(function (a, i) {
+    const row = document.createElement('button');
+    row.className = 'cat-row';
+    row.innerHTML =
+      '<div class="cat-icon">' + (a.icon || '📦') + '</div>' +
+      '<div class="cat-name">' + a.name + '</div>' +
+      (a.system ? '<div class="cat-tag">системный</div>' : '') +
+      '<div class="cat-chev">›</div>';
+    row.onclick = function () {
+      if (a.system) { tg.showAlert('Это системный счёт по умолчанию. Его нельзя удалить, но можно переименовать.'); }
+      openAccountPrompt(i);
+    };
+    listEl.appendChild(row);
+  });
+  document.getElementById('accCount').textContent = accounts.length + ' счетов';
+}
+function openAccountPrompt(index) {
+  promptMode = 'account';
+  promptEditingIndex = index;
+  const item = index != null ? accounts[index] : null;
+  document.getElementById('promptTitle').textContent = item ? 'Изменить счёт' : 'Новый счёт';
+  document.getElementById('promptBody').innerHTML =
+    '<div class="icon-input-row">' +
+    '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '💳') + '">' +
+    '<input type="text" id="promptName" placeholder="Например: Сберкнижка" value="' + (item ? item.name : '') + '" style="flex:1;">' +
+    '</div>' +
+    '<button class="submit-btn" onclick="savePromptAccount()">Сохранить</button>' +
+    (item && !item.system && accounts.length > 1 ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptAccount()">Удалить счёт</button>' : '');
+  openPrompt();
+}
+function savePromptAccount() {
+  const icon = document.getElementById('promptIcon').value.trim() || '📦';
+  const name = document.getElementById('promptName').value.trim();
+  if (!name) { tg.showAlert('Введите название счёта'); return; }
+  if (promptEditingIndex != null) {
+    accounts[promptEditingIndex].name = name;
+    accounts[promptEditingIndex].icon = icon;
+  } else {
+    accounts.push({ name: name, icon: icon, system: false });
+  }
+  persistAccounts();
+  closePrompt();
+  renderAccList();
+  tg.HapticFeedback.notificationOccurred('success');
+}
+function deletePromptAccount() {
+  const name = accounts[promptEditingIndex].name;
+  tg.showConfirm('Удалить счёт «' + name + '»? Старые операции сохранят это название.', function (ok) {
+    if (!ok) return;
+    accounts.splice(promptEditingIndex, 1);
+    persistAccounts();
+    closePrompt();
+    renderAccList();
+  });
+}
+
+/* ===== Бюджеты ===== */
+async function fetchCurrentMonthByCategory() {
+  const now2 = new Date();
+  const start = Math.floor(new Date(now2.getFullYear(), now2.getMonth(), 1).getTime() / 1000);
+  const end = Math.floor(new Date(now2.getFullYear(), now2.getMonth() + 1, 0, 23, 59, 59).getTime() / 1000);
+  try {
+    const txs = await api('/api/transactions?init_data=' + encodeURIComponent(initData) + '&limit=3000&start=' + start + '&end=' + end);
+    const byCat = {};
+    txs.forEach(function (t) {
+      if (t.type !== 'expense') return;
+      byCat[t.category] = (byCat[t.category] || 0) + Number(t.amount);
+    });
+    return byCat;
+  } catch (e) { return {}; }
+}
+function renderBudgetsModal(body) {
+  body.innerHTML = '<div id="budgetList"><div class="empty">Загрузка…</div></div>' +
+    '<div class="card-hint">Лимит месячный: потраченное обнуляется первого числа. Расчёт по текущему календарному месяцу, независимо от выбранного периода на главном экране.</div>';
+  fetchCurrentMonthByCategory().then(function (byCat) {
+    const listEl = document.getElementById('budgetList');
+    listEl.innerHTML = '';
+    expenseCategories.forEach(function (c) {
+      const limit = budgets[c.name];
+      const spent = byCat[c.name] || 0;
+      const row = document.createElement('button');
+      row.className = 'budget-row';
+      const pct = limit ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+      row.innerHTML =
+        '<div class="budget-top">' +
+        '<div class="cat-icon">' + (c.icon || '🏷️') + '</div>' +
+        '<div class="cat-name">' + c.name + '</div>' +
+        '<div class="budget-val' + (limit ? ' set' : '') + '">' + (limit ? (fmt(spent) + ' / ' + fmt(limit) + ' ₴') : '—') + '</div>' +
+        '</div>' +
+        (limit ? '<div class="budget-bar"><div class="budget-bar-fill' + (spent > limit ? ' over' : '') + '" style="width:' + pct + '%"></div></div>' : '');
+      row.onclick = function () { openBudgetPrompt(c.name, limit); };
+      listEl.appendChild(row);
+    });
+  });
+}
+function openBudgetPrompt(catName, limit) {
+  promptMode = 'budget';
+  promptEditingIndex = catName;
+  document.getElementById('promptTitle').textContent = catName;
+  document.getElementById('promptBody').innerHTML =
+    '<label>Месячный лимит, ₴</label>' +
+    '<input type="number" inputmode="decimal" id="promptAmount" placeholder="Без лимита" value="' + (limit || '') + '">' +
+    '<button class="submit-btn" onclick="saveBudgetPrompt()">Сохранить</button>' +
+    (limit ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="clearBudgetPrompt()">Убрать лимит</button>' : '');
+  openPrompt();
+}
+function saveBudgetPrompt() {
+  const val = parseFloat(document.getElementById('promptAmount').value);
+  if (val && val > 0) budgets[promptEditingIndex] = val; else delete budgets[promptEditingIndex];
+  saveJSON('walletBudgets', budgets);
+  closePrompt();
+  renderBudgetsModal(document.getElementById('modalBody'));
+  tg.HapticFeedback.notificationOccurred('success');
+}
+function clearBudgetPrompt() {
+  delete budgets[promptEditingIndex];
+  saveJSON('walletBudgets', budgets);
+  closePrompt();
+  renderBudgetsModal(document.getElementById('modalBody'));
+}
+
+/* ===== Промпт-шторка (общая) ===== */
+function openPrompt() { document.getElementById('promptOverlay').classList.add('open'); }
+function closePrompt() { document.getElementById('promptOverlay').classList.remove('open'); promptMode = null; promptEditingIndex = null; }
+function closeOnPromptOverlay(e) { if (e.target.id === 'promptOverlay') closePrompt(); }
+
+/* ===== Шорткат ===== */
+function renderShortcutModal(body) {
+  const masked = shortcutKey.slice(0, 8) + '-••••-••••-••••-' + shortcutKey.slice(-4);
+  body.innerHTML =
+    '<div class="shortcut-hero"><div class="ic">⚡</div><div>' +
+    '<h3>Быстрый ввод</h3><p>Учёт трат и доходов в одно касание, не открывая чат.</p>' +
+    '</div></div>' +
+    '<div class="settings-group-label">Ключ доступа</div>' +
+    '<div class="key-box"><code>' + masked + '</code><button class="key-copy-btn" onclick="copyShortcutKey()">Копировать</button></div>' +
+    '<div class="card-hint" style="margin-bottom:16px;">Никому не передавай этот ключ — он даёт доступ к записи операций от твоего имени.</div>' +
+    '<div class="settings-group-label">Как настроить</div>' +
+    '<div class="step-row"><div class="step-num">1</div><div class="step-text">Скопируй ключ выше</div></div>' +
+    '<div class="step-row"><div class="step-num">2</div><div class="step-text">Создай в приложении «Команды» (Shortcuts) свою автоматизацию с этим ключом</div></div>' +
+    '<div class="step-row"><div class="step-num">3</div><div class="step-text">Запускай её любым удобным способом — см. ниже</div></div>' +
+    '<div class="settings-group-label">Быстрый вызов</div>' +
+    '<div class="invoke-row"><div class="ic">📱</div><div class="txt"><strong>Касание крышки</strong><span>Настройки → Универсальный доступ → Касание → Касание задней панели</span></div></div>' +
+    '<div class="invoke-row"><div class="ic">⏻</div><div class="txt"><strong>Кнопка «Действие»</strong><span>Настройки → Кнопка «Действие» → Быстрая команда</span></div></div>' +
+    '<div class="invoke-row"><div class="ic">🎛️</div><div class="txt"><strong>Пункт управления</strong><span>Шторка сверху → «+» → выбери команду</span></div></div>' +
+    '<div class="card-hint">Доступно на iOS. Поддержка Android появится позже.</div>';
+}
+function copyShortcutKey() {
+  const done = function () { tg.HapticFeedback.notificationOccurred('success'); tg.showAlert('Ключ скопирован'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shortcutKey).then(done).catch(function () { fallbackCopy(shortcutKey); done(); });
+  } else { fallbackCopy(shortcutKey); done(); }
+}
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch (e) { console.error(e); }
+  document.body.removeChild(ta);
+}
+
+/* ===== Настройки ===== */
+function renderSettingsModal(body) {
+  body.innerHTML =
+    '<div class="settings-group-label">Тема</div>' +
+    '<div class="seg-toggle">' +
+    '<button class="seg-btn" id="themeSystemBtn">Системная</button>' +
+    '<button class="seg-btn" id="themeLightBtn">Светлая</button>' +
+    '<button class="seg-btn" id="themeDarkBtn">Тёмная</button>' +
+    '</div>' +
+
+    '<div class="settings-group-label">Время</div>' +
+    '<button class="list-row" onclick="openTimezonePrompt()">' +
+    '<div class="lr-name">Часовой пояс</div>' +
+    '<div class="lr-val">' + tzLabel(walletTimezone) + '</div><div class="lr-chev">›</div></button>' +
+
+    '<div class="settings-group-label">Напоминания</div>' +
+    '<div class="list-row"><div class="lr-name">Ежедневное напоминание</div>' +
+    '<label class="toggle-switch"><input type="checkbox" id="reminderToggle" ' + (reminderEnabled ? 'checked' : '') + '><span class="slider"></span></label></div>' +
+    '<div class="list-row"><div class="lr-name">Время</div><input type="time" id="reminderTimeInput" value="' + reminderTime + '"></div>' +
+    '<div class="card-hint">Вечером приходит итог дня. Если записей за день не было, вместо него придёт напоминание внести траты.</div>' +
+
+    '<div class="settings-group-label">Быстрый ввод</div>' +
+    '<button class="list-row" onclick="openModal(\'shortcut\')"><div class="lr-name">Шорткат</div><div class="lr-val">Ввод в одно касание</div><div class="lr-chev">›</div></button>' +
+
+    '<div class="settings-group-label">Ещё</div>' +
+    '<button class="list-row" onclick="tg.showAlert(\'Напишите нам, если возникли вопросы — мы поможем.\')"><div class="lr-name">Помощь и поддержка</div><div class="lr-chev">›</div></button>' +
+    '<button class="list-row" onclick="tg.showAlert(\'Пользовательское соглашение доступно по запросу у команды приложения.\')"><div class="lr-name">Пользовательское соглашение</div><div class="lr-chev">›</div></button>' +
+    '<button class="list-row" onclick="tg.showAlert(\'Политика конфиденциальности доступна по запросу у команды приложения.\')"><div class="lr-name">Политика конфиденциальности</div><div class="lr-chev">›</div></button>' +
+    '<div class="list-row"><div class="lr-name">Версия</div><div class="lr-val">1.0.0</div></div>';
+
+  document.getElementById('themeSystemBtn').classList.toggle('active', walletTheme === 'system');
+  document.getElementById('themeLightBtn').classList.toggle('active', walletTheme === 'light');
+  document.getElementById('themeDarkBtn').classList.toggle('active', walletTheme === 'dark');
+  document.getElementById('themeSystemBtn').onclick = function () { setWalletTheme('system'); };
+  document.getElementById('themeLightBtn').onclick = function () { setWalletTheme('light'); };
+  document.getElementById('themeDarkBtn').onclick = function () { setWalletTheme('dark'); };
+
+  document.getElementById('reminderToggle').onchange = function (e) {
+    reminderEnabled = e.target.checked;
+    localStorage.setItem('walletReminderEnabled', reminderEnabled ? '1' : '0');
+  };
+  document.getElementById('reminderTimeInput').onchange = function (e) {
+    reminderTime = e.target.value || '20:00';
+    localStorage.setItem('walletReminderTime', reminderTime);
+  };
+}
+function setWalletTheme(mode) {
+  walletTheme = mode;
+  localStorage.setItem('walletTheme', mode);
+  applyTheme();
+  renderSettingsModal(document.getElementById('modalBody'));
+}
+function tzLabel(id) {
+  const found = TIMEZONE_OPTIONS.find(function (t) { return t.id === id; });
+  return found ? found.label : id;
+}
+function openTimezonePrompt() {
+  promptMode = 'timezone';
+  document.getElementById('promptTitle').textContent = 'Часовой пояс';
+  const body = document.getElementById('promptBody');
+  body.innerHTML = '<div class="chip-group" id="tzChips" style="flex-direction:column; align-items:stretch; gap:8px;"></div>';
+  const wrap = document.getElementById('tzChips');
+  wrap.style.display = 'flex';
+  TIMEZONE_OPTIONS.forEach(function (t) {
+    const btn = document.createElement('button');
+    btn.className = 'list-row';
+    btn.style.borderRadius = '12px';
+    btn.style.background = 'rgba(255,255,255,0.04)';
+    btn.style.padding = '12px';
+    btn.innerHTML = '<div class="lr-name">' + t.label + '</div>' + (t.id === walletTimezone ? '<div class="lr-chev">✓</div>' : '');
+    btn.onclick = function () {
+      walletTimezone = t.id;
+      localStorage.setItem('walletTimezone', t.id);
+      closePrompt();
+      renderSettingsModal(document.getElementById('modalBody'));
+    };
+    wrap.appendChild(btn);
+  });
+  openPrompt();
+}
+
+/* ===== Онбординг ===== */
+const ONBOARD_STEPS = [
+  { emoji: '👋', title: 'Добро пожаловать в Wallet', desc: 'Быстро смотри баланс, добавляй операции и следи за расходами всей семьи в одном месте.' },
+  { emoji: '💜', title: 'Баланс и период', desc: 'Наверху выбирай месяц или «Всё время», а карточка ниже показывает общий баланс за выбранный период.' },
+  { emoji: '➕', title: 'Добавляй операции', desc: 'Кнопка «Добавить» или большая круглая кнопка снизу открывают форму — выбери тип, категорию, место хранения и сумму.' },
+  { emoji: '📊', title: 'Категории и бюджеты', desc: 'В меню (значок ☰ вверху слева) можно настраивать категории, ставить месячные лимиты в «Бюджетах» и включать быстрый ввод без открытия чата.' },
+  { emoji: '⚙️', title: 'Настройки — под тебя', desc: 'Тема, часовой пояс и напоминания находятся в разделе «Настройки» в том же меню. Готово — можно начинать!' }
+];
+let onboardIndex = 0;
+function startOnboarding() {
+  onboardIndex = 0;
+  renderOnboardStep();
+  document.getElementById('onboardOverlay').classList.add('open');
+}
+function renderOnboardStep() {
+  const step = ONBOARD_STEPS[onboardIndex];
+  document.getElementById('onboardBody').innerHTML =
+    '<div class="onboard-illustration"><div class="emoji">' + step.emoji + '</div></div>' +
+    '<div class="onboard-title">' + step.title + '</div>' +
+    '<div class="onboard-desc">' + step.desc + '</div>';
+  const dots = document.getElementById('onboardDots');
+  dots.innerHTML = '';
+  ONBOARD_STEPS.forEach(function (s, i) {
+    const d = document.createElement('div');
+    d.className = 'onboard-dot' + (i === onboardIndex ? ' active' : '');
+    dots.appendChild(d);
+  });
+  document.getElementById('onboardBackBtn').style.visibility = onboardIndex === 0 ? 'hidden' : 'visible';
+  document.getElementById('onboardNextBtn').textContent = onboardIndex === ONBOARD_STEPS.length - 1 ? 'Готово' : 'Далее';
+}
+function onboardStep(delta) {
+  if (delta > 0 && onboardIndex === ONBOARD_STEPS.length - 1) { finishOnboarding(); return; }
+  onboardIndex = Math.max(0, Math.min(ONBOARD_STEPS.length - 1, onboardIndex + delta));
+  renderOnboardStep();
+}
+function finishOnboarding() {
+  document.getElementById('onboardOverlay').classList.remove('open');
+  localStorage.setItem('walletOnboardingSeen', '1');
+}
+
+/* ===== Перевод между счетами ===== */
+let transferFrom = null, transferTo = null;
+function openTransferSheet() {
+  if (accounts.length < 2) { tg.showAlert('Для перевода нужно как минимум два счёта. Добавьте ещё один счёт в разделе «Счета».'); return; }
+  document.getElementById('transferAmount').value = '';
+  document.getElementById('transferComment').value = '';
+  transferFrom = accountsList[0];
+  transferTo = accountsList[1];
+  renderTransferChips();
+  document.getElementById('transferOverlay').classList.add('open');
+}
+function renderTransferChips() {
+  const fromEl = document.getElementById('transferFromButtons');
+  const toEl = document.getElementById('transferToButtons');
+  fromEl.innerHTML = ''; toEl.innerHTML = '';
+  accountsList.forEach(function (a) {
+    const fBtn = document.createElement('div');
+    fBtn.className = 'chip-btn' + (a === transferFrom ? ' selected' : '');
+    fBtn.textContent = accIcon(a) + ' ' + a;
+    fBtn.onclick = function () { transferFrom = a; renderTransferChips(); };
+    fromEl.appendChild(fBtn);
+
+    const tBtn = document.createElement('div');
+    tBtn.className = 'chip-btn' + (a === transferTo ? ' selected' : '');
+    tBtn.textContent = accIcon(a) + ' ' + a;
+    tBtn.onclick = function () { transferTo = a; renderTransferChips(); };
+    toEl.appendChild(tBtn);
+  });
+}
+function closeTransferSheet() { document.getElementById('transferOverlay').classList.remove('open'); }
+function closeOnTransferOverlay(e) { if (e.target.id === 'transferOverlay') closeTransferSheet(); }
+async function submitTransfer() {
+  const amount = parseFloat(document.getElementById('transferAmount').value);
+  if (!amount || amount <= 0) { tg.showAlert('Введите сумму перевода'); return; }
+  if (!transferFrom || !transferTo || transferFrom === transferTo) { tg.showAlert('Выберите два разных счёта'); return; }
+  const comment = document.getElementById('transferComment').value;
+  const btn = document.getElementById('transferSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Переводим…';
+  const now4 = Math.floor(Date.now() / 1000);
+  try {
+    await api('/api/transactions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ init_data: initData, amount: amount, type: 'expense', category: 'Перевод', account: transferFrom, comment: 'Перевод на «' + transferTo + '»' + (comment ? ' · ' + comment : ''), created_at: now4 })
+    });
+    await api('/api/transactions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ init_data: initData, amount: amount, type: 'income', category: 'Перевод', account: transferTo, comment: 'Перевод с «' + transferFrom + '»' + (comment ? ' · ' + comment : ''), created_at: now4 })
+    });
+    closeTransferSheet();
+    tg.HapticFeedback.notificationOccurred('success');
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    tg.showAlert('Не получилось выполнить перевод');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Перевести';
+  }
+}
+
+/* ===== Вход по коду партнёра ===== */
+function openJoinPrompt() {
+  promptMode = 'join';
+  document.getElementById('promptTitle').textContent = 'Код партнёра';
+  document.getElementById('promptBody').innerHTML =
+    '<label>Код приглашения</label>' +
+    '<input type="text" id="promptJoinCode" placeholder="Например: AB12CD">' +
+    '<button class="submit-btn" onclick="submitJoinCode()">Присоединиться</button>' +
+    '<div class="card-hint">Можно ввести код здесь или отправить боту команду /link ' + '&lt;код&gt;' + ' в чате.</div>';
+  openPrompt();
+}
+async function submitJoinCode() {
+  const code = document.getElementById('promptJoinCode').value.trim();
+  if (!code) { tg.showAlert('Введите код'); return; }
+  try {
+    const resp = await api('/api/link', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ init_data: initData, code: code })
+    });
+    closePrompt();
+    tg.HapticFeedback.notificationOccurred('success');
+    tg.showAlert(resp.message || 'Готово!');
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    tg.showAlert('Не получилось присоединиться по коду. Попробуйте команду /link ' + code + ' в чате с ботом.');
   }
 }
 
