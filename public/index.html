@@ -285,7 +285,6 @@
   body.theme-light .cat-icon, body.theme-light .storage-icon, body.theme-light .step-row, body.theme-light .shortcut-hero, body.theme-light .key-box, body.theme-light .onboard-illustration, body.theme-light .receipt-item {
     background: rgba(20,20,45,0.05);
   }
-  body.theme-light .mic-btn { background: rgba(20,20,45,0.05); border-color: rgba(0,0,0,0.08); color: var(--text); }
   body.theme-light .receipt-item select, body.theme-light .receipt-item input { background: rgba(20,20,45,0.06); color: var(--text); }
 
   /* ===== Тост-уведомления об ошибках ===== */
@@ -313,21 +312,6 @@
 
   /* ===== Перевод между счетами ===== */
   .transfer-arrow { text-align:center; font-size: 18px; color: var(--hint); margin: -2px 0; }
-
-  /* ===== Умный ввод (текст/голос) ===== */
-  .smart-input-row { display:flex; gap: 8px; margin-top: 6px; }
-  .smart-input-row input { flex: 1; margin-bottom: 0; }
-  .mic-btn {
-    width: 44px; height: 44px; flex-shrink:0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.04); color: white; font-size: 18px;
-  }
-  .mic-btn.recording { background: #ff6b81; border-color: #ff6b81; animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
-  .parse-btn {
-    width: 100%; padding: 11px; border-radius: 12px; border: none; margin: 8px 0 14px;
-    background: linear-gradient(90deg, var(--purple), var(--pink)); color: white; font-family: inherit; font-size: 13px; font-weight: 700;
-  }
-  .parse-btn:disabled { opacity: 0.6; }
 
   /* ===== Обзор распознанного чека ===== */
   .receipt-item { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
@@ -436,12 +420,6 @@
       <h2 id="sheetTitle">Новая операция</h2>
       <button class="sheet-close" onclick="closeSheet()">✕</button>
     </div>
-
-    <div class="smart-input-row">
-      <input type="text" id="smartInput" placeholder="✨ Опиши операцию: бананы 200">
-      <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()">🎤</button>
-    </div>
-    <button class="parse-btn" id="parseBtn" onclick="parseSmartInput()">Разобрать с ИИ</button>
 
     <div class="type-toggle">
       <div class="type-btn" id="typeExpenseBtn" onclick="setType('expense')">− Расход</div>
@@ -1888,74 +1866,6 @@ async function submitJoinCode() {
     console.error(e);
     tg.showAlert('Не получилось присоединиться по коду. Попробуйте команду /link ' + code + ' в чате с ботом.');
   }
-}
-
-/* ===== Умный ввод: текст через ИИ ===== */
-async function parseSmartInput() {
-  const input = document.getElementById('smartInput');
-  const text = input.value.trim();
-  if (!text) { tg.showAlert('Опишите операцию, например: бананы 200'); return; }
-  const btn = document.getElementById('parseBtn');
-  btn.disabled = true;
-  btn.textContent = 'Распознаю…';
-  try {
-    const resp = await api('/api/classify', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        init_data: initData,
-        text: text,
-        categories: { expense: expenseCategories.map(function (c) { return c.name; }), income: incomeCategories.map(function (c) { return c.name; }) },
-        accounts: accountsList
-      })
-    });
-    applyParsedToForm(resp);
-    input.value = '';
-    tg.HapticFeedback.notificationOccurred('success');
-  } catch (e) {
-    console.error(e);
-    showToast('Не получилось распознать текст. Заполните форму вручную.');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Разобрать с ИИ';
-  }
-}
-function applyParsedToForm(parsed) {
-  if (!parsed) return;
-  const type = parsed.type === 'income' ? 'income' : 'expense';
-  setType(type);
-  if (parsed.amount) document.getElementById('amountInput').value = parsed.amount;
-  if (parsed.comment) document.getElementById('commentInput').value = parsed.comment;
-  renderCatButtons(parsed.category || null);
-  renderAccButtons(parsed.account || selectedAccount);
-}
-
-/* ===== Умный ввод: голос (Web Speech API — работает в Chrome/Android, не работает в iOS WKWebView) ===== */
-let recognition = null;
-let isRecording = false;
-function toggleVoiceInput() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) {
-    tg.showAlert('Голосовой ввод не поддерживается в этом браузере/приложении. Отправьте голосовое сообщение прямо боту в чат — он тоже умеет распознавать речь.');
-    return;
-  }
-  if (isRecording) { recognition.stop(); return; }
-  recognition = new SpeechRec();
-  recognition.lang = 'ru-RU';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  const micBtn = document.getElementById('micBtn');
-  recognition.onstart = function () { isRecording = true; micBtn.classList.add('recording'); };
-  recognition.onend = function () { isRecording = false; micBtn.classList.remove('recording'); };
-  recognition.onerror = function (e) {
-    isRecording = false; micBtn.classList.remove('recording');
-    if (e.error !== 'no-speech') showToast('Не удалось распознать голос');
-  };
-  recognition.onresult = function (e) {
-    const text = e.results[0][0].transcript;
-    document.getElementById('smartInput').value = text;
-    parseSmartInput();
-  };
-  try { recognition.start(); } catch (e) { console.error(e); }
 }
 
 /* ===== Скан чека ===== */
