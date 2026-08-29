@@ -60,13 +60,10 @@ bot.command('app', async (ctx) => {
   await ctx.reply('Открыть кошелёк:', mainKeyboard());
 });
 
-// Сохраняет распознанную ИИ операцию и отвечает пользователю подтверждением.
-async function saveAndReply(ctx, user, parsed) {
+// Сохраняет одну распознанную операцию, возвращает строку для отчёта или null, если сумма не распознана.
+async function saveOneTransaction(user, parsed) {
   const amount = Number(parsed && parsed.amount);
-  if (!parsed || !amount || Number.isNaN(amount)) {
-    await ctx.reply('Не понял сумму. Попробуй ещё раз, например: -500 продукты');
-    return;
-  }
+  if (!parsed || !amount || Number.isNaN(amount)) return null;
   const type = parsed.type === 'income' ? 'income' : 'expense';
   const category = parsed.category || 'Прочее';
   const comment = parsed.comment || '';
@@ -74,10 +71,27 @@ async function saveAndReply(ctx, user, parsed) {
   await db.addTransaction(user.id, amount, type, category, comment, account);
   const emoji = type === 'income' ? '📈' : '📉';
   const sign = type === 'income' ? '+' : '−';
-  await ctx.reply(`${emoji} Записано: ${sign}${Math.round(amount)} ₴ · ${category}${comment ? ' · ' + comment : ''}`);
+  return `${emoji} ${sign}${Math.round(amount)} ₴ · ${category}${comment ? ' · ' + comment : ''}`;
 }
 
-// Быстрый ввод с явным знаком: "-500 продукты" / "+30000 зарплата"
+// Сохраняет одну или несколько операций (parsed — массив или один объект) и отвечает итогом.
+async function saveAndReply(ctx, user, parsed) {
+  const list = Array.isArray(parsed) ? parsed : [parsed];
+  const lines = [];
+  for (const item of list) {
+    const line = await saveOneTransaction(user, item);
+    if (line) lines.push(line);
+  }
+  if (!lines.length) {
+    await ctx.reply('Не понял сумму. Попробуй ещё раз, например: -500 продукты');
+    return;
+  }
+  const header = lines.length > 1 ? `Записал ${lines.length} операции:\n` : 'Записано: ';
+  await ctx.reply(header + lines.join('\n'));
+}
+
+// Быстрый ввод с явным знаком: "-500 продукты" / "+30000 зарплата".
+// Можно перечислить несколько через запятую: "-200 картошка, -3422 лекарства, -450 такси"
 bot.hears(/^[+-]\s?\d/, async (ctx) => {
   const user = ctx.from;
   await db.getOrCreateUser(user.id, user.username, user.first_name);
@@ -94,7 +108,7 @@ bot.hears(/^[+-]\s?\d/, async (ctx) => {
   }
 });
 
-// Свободный текст без знака: "купил бananas 200", "заплатил за такси 150"
+// Свободный текст без знака: "купил бananas 200", "картошка 200, лекарства 3422, такси 450"
 // Реагируем только если в сообщении вообще есть цифры — иначе это обычная переписка, не трата.
 bot.on('text', async (ctx) => {
   const text = (ctx.message.text || '').trim();
@@ -106,8 +120,10 @@ bot.on('text', async (ctx) => {
   await db.getOrCreateUser(user.id, user.username, user.first_name);
   try {
     const parsed = await classifyText(text, { expense: db.DEFAULT_CATEGORIES, income: [] }, []);
-    if (!parsed || !parsed.amount) return; // ИИ решил, что это не про деньги — молча пропускаем
-    await saveAndReply(ctx, user, parsed);
+    const list = Array.isArray(parsed) ? parsed : [parsed];
+    const hasAmount = list.some(function (it) { return it && it.amount; });
+    if (!hasAmount) return; // ИИ решил, что это не про деньги — молча пропускаем
+    await saveAndReply(ctx, user, list);
   } catch (e) {
     console.error(e);
     // Намеренно не отвечаем ошибкой на обычные сообщения, чтобы не мешать переписке
