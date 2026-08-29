@@ -282,9 +282,11 @@
   body.theme-light .sheet-close, body.theme-light .modal-close { background: rgba(20,20,45,0.07); color: var(--text); }
   body.theme-light .list-row, body.theme-light .cat-row, body.theme-light .budget-row { border-bottom-color: rgba(0,0,0,0.06); }
   body.theme-light .list-row input[type="time"] { color: var(--text); color-scheme: light; }
-  body.theme-light .cat-icon, body.theme-light .storage-icon, body.theme-light .step-row, body.theme-light .shortcut-hero, body.theme-light .key-box, body.theme-light .onboard-illustration {
+  body.theme-light .cat-icon, body.theme-light .storage-icon, body.theme-light .step-row, body.theme-light .shortcut-hero, body.theme-light .key-box, body.theme-light .onboard-illustration, body.theme-light .receipt-item {
     background: rgba(20,20,45,0.05);
   }
+  body.theme-light .mic-btn { background: rgba(20,20,45,0.05); border-color: rgba(0,0,0,0.08); color: var(--text); }
+  body.theme-light .receipt-item select, body.theme-light .receipt-item input { background: rgba(20,20,45,0.06); color: var(--text); }
 
   /* ===== Тост-уведомления об ошибках ===== */
   .toast {
@@ -311,6 +313,29 @@
 
   /* ===== Перевод между счетами ===== */
   .transfer-arrow { text-align:center; font-size: 18px; color: var(--hint); margin: -2px 0; }
+
+  /* ===== Умный ввод (текст/голос) ===== */
+  .smart-input-row { display:flex; gap: 8px; margin-top: 6px; }
+  .smart-input-row input { flex: 1; margin-bottom: 0; }
+  .mic-btn {
+    width: 44px; height: 44px; flex-shrink:0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04); color: white; font-size: 18px;
+  }
+  .mic-btn.recording { background: #ff6b81; border-color: #ff6b81; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
+  .parse-btn {
+    width: 100%; padding: 11px; border-radius: 12px; border: none; margin: 8px 0 14px;
+    background: linear-gradient(90deg, var(--purple), var(--pink)); color: white; font-family: inherit; font-size: 13px; font-weight: 700;
+  }
+  .parse-btn:disabled { opacity: 0.6; }
+
+  /* ===== Обзор распознанного чека ===== */
+  .receipt-item { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+  .receipt-item-top { display:flex; align-items:center; gap: 8px; margin-bottom: 6px; }
+  .receipt-item select { flex:1; background: rgba(255,255,255,0.06); border: none; color: white; border-radius: 8px; padding: 7px; font-family: inherit; font-size: 12.5px; }
+  .receipt-item input[type="number"] { width: 90px; margin-bottom:0; background: rgba(255,255,255,0.06); }
+  .receipt-item .r-comment { font-size: 11.5px; color: var(--hint); }
+  .receipt-item .r-remove { background:none; border:none; color:#ff6b81; font-size: 15px; flex-shrink:0; }
 </style>
 
 </head>
@@ -411,6 +436,13 @@
       <h2 id="sheetTitle">Новая операция</h2>
       <button class="sheet-close" onclick="closeSheet()">✕</button>
     </div>
+
+    <div class="smart-input-row">
+      <input type="text" id="smartInput" placeholder="✨ Опиши операцию: бананы 200">
+      <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()">🎤</button>
+    </div>
+    <button class="parse-btn" id="parseBtn" onclick="parseSmartInput()">Разобрать с ИИ</button>
+
     <div class="type-toggle">
       <div class="type-btn" id="typeExpenseBtn" onclick="setType('expense')">− Расход</div>
       <div class="type-btn" id="typeIncomeBtn" onclick="setType('income')">+ Доход</div>
@@ -434,6 +466,7 @@
 </div>
 
 <div class="toast" id="toast"><span id="toastMsg"></span><button class="t-close" onclick="hideToast()">✕</button></div>
+<input type="file" id="receiptFileInput" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptFile(event)">
 
 <div class="sheet-overlay" id="transferOverlay" onclick="closeOnTransferOverlay(event)">
   <div class="sheet">
@@ -461,6 +494,7 @@
     </div>
     <div style="margin-top: 14px;">
       <button class="menu-item" onclick="closeMenu(); openModal('categories')"><span class="ic">🏷️</span><span class="lb">Категории</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); triggerReceiptPicker()"><span class="ic">📷</span><span class="lb">Скан чека</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openModal('accounts')"><span class="ic">🏦</span><span class="lb">Счета</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openTransferSheet()"><span class="ic">🔁</span><span class="lb">Перевод между счетами</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openModal('budgets')"><span class="ic">📊</span><span class="lb">Бюджеты</span><span class="chev">›</span></button>
@@ -1293,20 +1327,24 @@ function openSheet(type, txToEdit) {
     renderCatButtons(txToEdit ? txToEdit.category : null);
 
     selectedAccount = txToEdit ? (txToEdit.account || accountsList[1]) : (accountsList[1] || accountsList[0]);
-    const accButtons = document.getElementById('accButtons');
-    accButtons.innerHTML = '';
-    accountsList.forEach(function (a) {
-      const btn = document.createElement('div');
-      btn.className = 'chip-btn' + (a === selectedAccount ? ' selected' : '');
-      btn.textContent = accIcon(a) + ' ' + a;
-      btn.onclick = function () {
-        accButtons.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); });
-        btn.classList.add('selected');
-        selectedAccount = a;
-      };
-      accButtons.appendChild(btn);
-    });
+    renderAccButtons(selectedAccount);
   } catch (e) { console.error(e); }
+}
+function renderAccButtons(preselect) {
+  selectedAccount = preselect || selectedAccount || accountsList[0];
+  const accButtons = document.getElementById('accButtons');
+  accButtons.innerHTML = '';
+  accountsList.forEach(function (a) {
+    const btn = document.createElement('div');
+    btn.className = 'chip-btn' + (a === selectedAccount ? ' selected' : '');
+    btn.textContent = accIcon(a) + ' ' + a;
+    btn.onclick = function () {
+      accButtons.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      selectedAccount = a;
+    };
+    accButtons.appendChild(btn);
+  });
 }
 function closeSheet() { document.getElementById('overlay').classList.remove('open'); editingId = null; }
 function closeOnOverlay(e) { if (e.target.id === 'overlay') closeSheet(); }
@@ -1849,6 +1887,168 @@ async function submitJoinCode() {
   } catch (e) {
     console.error(e);
     tg.showAlert('Не получилось присоединиться по коду. Попробуйте команду /link ' + code + ' в чате с ботом.');
+  }
+}
+
+/* ===== Умный ввод: текст через ИИ ===== */
+async function parseSmartInput() {
+  const input = document.getElementById('smartInput');
+  const text = input.value.trim();
+  if (!text) { tg.showAlert('Опишите операцию, например: бананы 200'); return; }
+  const btn = document.getElementById('parseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Распознаю…';
+  try {
+    const resp = await api('/api/classify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        init_data: initData,
+        text: text,
+        categories: { expense: expenseCategories.map(function (c) { return c.name; }), income: incomeCategories.map(function (c) { return c.name; }) },
+        accounts: accountsList
+      })
+    });
+    applyParsedToForm(resp);
+    input.value = '';
+    tg.HapticFeedback.notificationOccurred('success');
+  } catch (e) {
+    console.error(e);
+    showToast('Не получилось распознать текст. Заполните форму вручную.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Разобрать с ИИ';
+  }
+}
+function applyParsedToForm(parsed) {
+  if (!parsed) return;
+  const type = parsed.type === 'income' ? 'income' : 'expense';
+  setType(type);
+  if (parsed.amount) document.getElementById('amountInput').value = parsed.amount;
+  if (parsed.comment) document.getElementById('commentInput').value = parsed.comment;
+  renderCatButtons(parsed.category || null);
+  renderAccButtons(parsed.account || selectedAccount);
+}
+
+/* ===== Умный ввод: голос (Web Speech API — работает в Chrome/Android, не работает в iOS WKWebView) ===== */
+let recognition = null;
+let isRecording = false;
+function toggleVoiceInput() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    tg.showAlert('Голосовой ввод не поддерживается в этом браузере/приложении. Отправьте голосовое сообщение прямо боту в чат — он тоже умеет распознавать речь.');
+    return;
+  }
+  if (isRecording) { recognition.stop(); return; }
+  recognition = new SpeechRec();
+  recognition.lang = 'ru-RU';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  const micBtn = document.getElementById('micBtn');
+  recognition.onstart = function () { isRecording = true; micBtn.classList.add('recording'); };
+  recognition.onend = function () { isRecording = false; micBtn.classList.remove('recording'); };
+  recognition.onerror = function (e) {
+    isRecording = false; micBtn.classList.remove('recording');
+    if (e.error !== 'no-speech') showToast('Не удалось распознать голос');
+  };
+  recognition.onresult = function (e) {
+    const text = e.results[0][0].transcript;
+    document.getElementById('smartInput').value = text;
+    parseSmartInput();
+  };
+  try { recognition.start(); } catch (e) { console.error(e); }
+}
+
+/* ===== Скан чека ===== */
+function triggerReceiptPicker() { document.getElementById('receiptFileInput').click(); }
+function handleReceiptFile(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function () {
+    const base64 = reader.result.split(',')[1];
+    await processReceiptImage(base64, file.type || 'image/jpeg');
+  };
+  reader.readAsDataURL(file);
+}
+let receiptItems = [];
+async function processReceiptImage(base64, mediaType) {
+  promptMode = 'receipt';
+  document.getElementById('promptTitle').textContent = 'Скан чека';
+  document.getElementById('promptBody').innerHTML = '<div class="empty">Читаю чек…</div>';
+  openPrompt();
+  try {
+    const items = await api('/api/receipt', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        init_data: initData, image: base64, media_type: mediaType,
+        categories: { expense: expenseCategories.map(function (c) { return c.name; }) }
+      })
+    });
+    if (!items.length) {
+      document.getElementById('promptBody').innerHTML = '<div class="empty">Не получилось распознать чек. Попробуйте более чёткое фото.</div>';
+      return;
+    }
+    receiptItems = items.map(function (it) { return { category: it.category || 'Прочее', amount: Number(it.amount) || 0, comment: it.comment || '' }; });
+    renderReceiptReview();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('promptBody').innerHTML = '<div class="empty">Ошибка распознавания: ' + (e.message || 'попробуйте ещё раз') + '</div>';
+  }
+}
+function renderReceiptReview() {
+  const catNames = expenseCategories.map(function (c) { return c.name; });
+  const body = document.getElementById('promptBody');
+  body.innerHTML = '';
+  receiptItems.forEach(function (item, i) {
+    const row = document.createElement('div');
+    row.className = 'receipt-item';
+    const options = catNames.map(function (name) {
+      return '<option value="' + name + '"' + (name === item.category ? ' selected' : '') + '>' + name + '</option>';
+    }).join('');
+    row.innerHTML =
+      '<div class="receipt-item-top">' +
+      '<select data-i="' + i + '" class="r-cat">' + options + '</select>' +
+      '<input type="number" inputmode="decimal" data-i="' + i + '" class="r-amount" value="' + item.amount + '">' +
+      '<button class="r-remove" data-i="' + i + '">✕</button>' +
+      '</div>' +
+      '<div class="r-comment">' + (item.comment || '') + '</div>';
+    body.appendChild(row);
+  });
+  const total = receiptItems.reduce(function (s, it) { return s + it.amount; }, 0);
+  const footer = document.createElement('div');
+  footer.innerHTML =
+    '<div class="card-hint" style="margin:8px 0 14px;">Итого: ' + fmt(total) + ' ₴ · проверьте категории и суммы перед сохранением</div>' +
+    '<button class="submit-btn" onclick="saveAllReceiptItems()">Сохранить все (' + receiptItems.length + ')</button>';
+  body.appendChild(footer);
+
+  body.querySelectorAll('.r-cat').forEach(function (sel) {
+    sel.onchange = function () { receiptItems[Number(sel.dataset.i)].category = sel.value; };
+  });
+  body.querySelectorAll('.r-amount').forEach(function (inp) {
+    inp.onchange = function () { receiptItems[Number(inp.dataset.i)].amount = Number(inp.value) || 0; renderReceiptReview(); };
+  });
+  body.querySelectorAll('.r-remove').forEach(function (btn) {
+    btn.onclick = function () { receiptItems.splice(Number(btn.dataset.i), 1); renderReceiptReview(); };
+  });
+}
+async function saveAllReceiptItems() {
+  if (!receiptItems.length) { closePrompt(); return; }
+  const now5 = Math.floor(Date.now() / 1000);
+  try {
+    for (const item of receiptItems) {
+      if (!item.amount) continue;
+      await api('/api/transactions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ init_data: initData, amount: item.amount, type: 'expense', category: item.category, account: 'Наличные', comment: item.comment, created_at: now5 })
+      });
+    }
+    closePrompt();
+    tg.HapticFeedback.notificationOccurred('success');
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    showToast('Не всё удалось сохранить, проверьте список операций');
   }
 }
 
