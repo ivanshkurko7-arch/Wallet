@@ -18,6 +18,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/classify"
+  to = "/.netlify/functions/classify"
+  status = 200
+
+[[redirects]]
+  from = "/api/receipt"
+  to = "/.netlify/functions/receipt"
+  status = 200
+
+[[redirects]]
   from = "/webhook"
   to = "/.netlify/functions/webhook"
   status = 200
