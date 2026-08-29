@@ -1,28 +1,36 @@
-const { verifyTelegramData } = require('./lib/verify');
-const { classifyText } = require('./lib/classify');
+const { callClaude, extractJSON } = require('./anthropic');
 
-const CORS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-};
+// Разбирает свободный текст ("бананы 200" или "картошка 200, лекарства 3422, такси 450")
+// в список из одной или нескольких операций.
+async function classifyText(text, categories, accounts) {
+  const expenseCats = (categories && categories.expense) || [];
+  const incomeCats = (categories && categories.income) || [];
+  const accs = accounts || [];
 
-exports.handler = async (event) => {
-  try {
-    if (event.httpMethod !== 'POST') {
-      return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Method not allowed' }) };
-    }
-    const body = JSON.parse(event.body || '{}');
-    verifyTelegramData(body.init_data); // подтверждаем, что запрос от авторизованного пользователя Telegram
+  const system =
+    'Ты помощник для учёта личных финансов. Пользователь присылает описание одной ИЛИ НЕСКОЛЬКИХ операций ' +
+    'на русском или украинском языке в одном сообщении, например: "бананы 200" или ' +
+    '"картошка 200, лекарства 3422, такси 450" или "зарплата 30000 и премия 5000". ' +
+    'Раздели сообщение на отдельные операции по запятым, точке с запятой, союзу "и" или переносам строк — ' +
+    'каждая часть с отдельной суммой считается отдельной операцией.\n\n' +
+    'Для КАЖДОЙ операции определи: тип (expense — расход, income — доход; если не уверен — expense), ' +
+    'сумму (только число, без валюты), наиболее подходящую категорию из списка ниже, и краткий комментарий ' +
+    '(что купили или за что доход, 2-4 слова).\n\n' +
+    'Категории расходов: ' + (expenseCats.join(', ') || 'Прочее') + '.\n' +
+    'Категории доходов: ' + (incomeCats.join(', ') || 'Прочие доходы') + '.\n' +
+    (accs.length ? ('Счета: ' + accs.join(', ') + '. Если счёт явно не упомянут в тексте — верни account: null.\n') : '') +
+    '\nОтвечай СТРОГО в виде JSON-МАССИВА без каких-либо пояснений и без markdown-разметки, ДАЖЕ ЕСЛИ операция всего одна:\n' +
+    '[{"type":"expense" | "income","amount":число,"category":"название строго из списка выше","account":"название из списка или null","comment":"краткое описание"}]\n' +
+    'Если ни одна категория явно не подходит для конкретной операции — используй последнюю в соответствующем списке ' +
+    '(обычно это "Прочее" / "Прочие доходы"). Если во всём сообщении нет ни одной суммы — верни пустой массив [].';
 
-    const text = (body.text || '').trim();
-    if (!text) {
-      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'text не передан' }) };
-    }
+  const raw = await callClaude({
+    system: system,
+    messages: [{ role: 'user', content: text }],
+    maxTokens: 600,
+  });
+  const result = extractJSON(raw);
+  return Array.isArray(result) ? result : [result];
+}
 
-    const result = await classifyText(text, body.categories || {}, body.accounts || []);
-    return { statusCode: 200, headers: CORS, body: JSON.stringify(result) };
-  } catch (e) {
-    console.error(e);
-    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: e.message }) };
-  }
-};
+module.exports = { classifyText };
