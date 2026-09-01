@@ -3,6 +3,13 @@ const { callClaude, extractJSON } = require('./anthropic');
 // Разбирает свободный текст ("бананы 200" или "картошка 200, лекарства 3422, такси 450")
 // в список из одной или нескольких операций.
 async function classifyText(text, categories, accounts) {
+  if (typeof text !== 'string' || !text.trim()) {
+    throw new Error('Пустой текст операции');
+  }
+  if (text.length > 500) {
+    throw new Error('Текст слишком длинный (максимум 500 символов)');
+  }
+
   const expenseCats = (categories && categories.expense) || [];
   const incomeCats = (categories && categories.income) || [];
   const accs = accounts || [];
