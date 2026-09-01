@@ -3,7 +3,7 @@ const { verifyTelegramData } = require('./lib/verify');
 
 const CORS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+     'Access-Control-Allow-Origin': 'https://wa1et.netlify.app',
 };
 
 exports.handler = async (event) => {
