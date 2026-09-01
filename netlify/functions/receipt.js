@@ -3,7 +3,7 @@ const { classifyReceipt } = require('./lib/receipt');
 
 const CORS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://wa1et.netlify.app',
 };
 
 exports.handler = async (event) => {
@@ -18,8 +18,8 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'image не передан' }) };
     }
 
-    const items = await classifyReceipt(body.image, body.media_type, body.categories || {});
-    return { statusCode: 200, headers: CORS, body: JSON.stringify(items) };
+    const result = await classifyReceipt(body.image, body.media_type, body.categories || {});
+    return { statusCode: 200, headers: CORS, body: JSON.stringify(result) };
   } catch (e) {
     console.error(e);
     return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: e.message }) };
