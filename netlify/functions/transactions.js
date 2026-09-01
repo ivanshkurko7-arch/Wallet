@@ -4,7 +4,7 @@ const { notifyFamily } = require('./lib/notify');
 
 const CORS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+     'Access-Control-Allow-Origin': 'https://wa1et.netlify.app',
 };
 
 function fmt(n) {
