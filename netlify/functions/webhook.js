@@ -8,9 +8,9 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const WEBAPP_URL = process.env.WEBAPP_URL;
 
 function mainKeyboard() {
-  return Markup.keyboard([
+  return Markup.inlineKeyboard([
     Markup.button.webApp('💰 Открыть Wallet', WEBAPP_URL),
-  ]).resize();
+  ]);
 }
 
 bot.start(async (ctx) => {
