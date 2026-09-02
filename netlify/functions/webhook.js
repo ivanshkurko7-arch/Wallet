@@ -8,9 +8,9 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const WEBAPP_URL = process.env.WEBAPP_URL;
 
 function mainKeyboard() {
-  return Markup.inlineKeyboard([
-    Markup.button.webApp('💰 Открыть кошелёк', WEBAPP_URL),
-  ]);
+  return Markup.keyboard([
+    Markup.button.webApp('💰 Открыть Wallet', WEBAPP_URL),
+  ]).resize();
 }
 
 bot.start(async (ctx) => {
@@ -18,17 +18,18 @@ bot.start(async (ctx) => {
   await db.getOrCreateUser(user.id, user.username, user.first_name);
   const code = await db.getInviteCode(user.id);
   const text =
-    `Привет, ${user.first_name}! 👋\n\n` +
-    'Это бот для учёта общих трат и доходов.\n\n' +
-    `Ваш код приглашения: <b>${code}</b>\n` +
-    'Отправьте его партнёру — пусть введёт в боте команду:\n' +
+    `💜 Добро пожаловать в <b>Wallet</b>, ${user.first_name}!\n\n` +
+    'Я помогу вести семейный бюджет без лишней возни: записывай траты и доходы прямо в чате, ' +
+    'сканируй чеки, диктуй голосом — сам всё разберу и разложу по категориям.\n\n' +
+    `🔑 Твой код приглашения: <b>${code}</b>\n` +
+    'Отправь его партнёру — пусть введёт в боте команду:\n' +
     `<code>/link ${code}</code>\n` +
-    'чтобы у вас стал общий бюджет.\n\n' +
-    'Добавлять траты можно прямо в чате:\n' +
-    '• Просто напишите: <code>купил бananas 200</code> или <code>-500 продукты</code>\n' +
-    '• Пришлите фото чека — разложу по категориям автоматически\n' +
-    '• Отправьте голосовое сообщение — распознаю и запишу\n\n' +
-    'Или откройте приложение кнопкой ниже 👇';
+    'чтобы бюджет стал общим.\n\n' +
+    '<b>Как пользоваться:</b>\n' +
+    '• Просто напиши: <code>купил хлеб 50</code>\n' +
+    '• Пришли фото чека — разложу по категориям сам\n' +
+    '• Надиктуй голосом — распознаю и запишу\n\n' +
+    'Открывай приложение кнопкой снизу 👇';
   await ctx.reply(text, { parse_mode: 'HTML', ...mainKeyboard() });
 });
 
@@ -58,6 +59,58 @@ bot.command('link', async (ctx) => {
 
 bot.command('app', async (ctx) => {
   await ctx.reply('Открыть кошелёк:', mainKeyboard());
+});
+
+// Показывает ваш Telegram ID — нужен один раз, чтобы настроить ADMIN_USER_ID и получить доступ к /users
+bot.command('whoami', async (ctx) => {
+  const u = ctx.from;
+  await ctx.reply(
+    `Твой Telegram ID: <code>${u.id}</code>\n` +
+    `Имя: ${u.first_name || '—'}\n` +
+    `Username: ${u.username ? '@' + u.username : '—'}\n\n` +
+    'Чтобы получить доступ к команде /users, добавь этот ID как переменную окружения ADMIN_USER_ID в Netlify.',
+    { parse_mode: 'HTML' }
+  );
+});
+
+// Список всех пользователей бота — доступно только владельцу (ADMIN_USER_ID)
+bot.command('users', async (ctx) => {
+  const adminIds = (process.env.ADMIN_USER_ID || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!adminIds.includes(String(ctx.from.id))) {
+    return; // молча игнорируем — не палим, что команда вообще существует
+  }
+  try {
+    const [usersRes, familiesRes] = await Promise.all([
+      fetch(process.env.SUPABASE_URL + '/rest/v1/users?select=user_id,username,first_name,family_id&order=user_id.asc', {
+        headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + process.env.SUPABASE_SERVICE_KEY },
+      }),
+      fetch(process.env.SUPABASE_URL + '/rest/v1/families?select=id,invite_code', {
+        headers: { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + process.env.SUPABASE_SERVICE_KEY },
+      }),
+    ]);
+    if (!usersRes.ok || !familiesRes.ok) {
+      await ctx.reply('Не получилось получить список пользователей из базы.');
+      return;
+    }
+    const users = await usersRes.json();
+    const families = await familiesRes.json();
+
+    let text = `👥 <b>Пользователи бота (${users.length})</b>\n👪 Семей: ${families.length}\n\n`;
+    users.forEach(function (u, i) {
+      const name = u.first_name || 'Без имени';
+      const uname = u.username ? '@' + u.username : '—';
+      text += `${i + 1}. ${name} (${uname}) — id <code>${u.user_id}</code> · семья #${u.family_id}\n`;
+    });
+
+    // Telegram режет сообщения длиннее ~4096 символов — на всякий случай режем на части
+    const CHUNK = 3800;
+    for (let i = 0; i < text.length; i += CHUNK) {
+      await ctx.reply(text.slice(i, i + CHUNK), { parse_mode: 'HTML' });
+    }
+  } catch (e) {
+    console.error(e);
+    await ctx.reply('Ошибка при получении списка: ' + e.message);
+  }
 });
 
 // Сохраняет одну распознанную операцию, возвращает строку для отчёта или null, если сумма не распознана.
@@ -143,12 +196,15 @@ bot.on('photo', async (ctx) => {
     const buf = Buffer.from(await imgRes.arrayBuffer());
     const base64 = buf.toString('base64');
 
-    const items = await classifyReceipt(base64, 'image/jpeg', { expense: db.DEFAULT_CATEGORIES });
+    const result = await classifyReceipt(base64, 'image/jpeg', { expense: db.DEFAULT_CATEGORIES });
+    const items = result.items || [];
     if (!items.length) {
       await ctx.reply('Не получилось распознать чек. Попробуй сфотографировать более чётко и целиком.');
       return;
     }
-    let replyText = '🧾 Записал по чеку:\n';
+    let replyText = result.needsReview
+      ? '⚠️ Сумма позиций не совпадает с итогом чека' + (result.total != null ? ` (на чеке: ${Math.round(result.total)} ₴)` : '') + ' — проверь записи ниже и поправь при необходимости.\n\n🧾 Записал по чеку:\n'
+      : '🧾 Записал по чеку:\n';
     for (const item of items) {
       const amount = Number(item.amount);
       if (!amount) continue;
