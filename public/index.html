@@ -700,7 +700,7 @@ function showToast(msg) {
   document.getElementById('toastMsg').textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, 4500);
+  toastTimer = setTimeout(hideToast, 9000);
 }
 function hideToast() { document.getElementById('toast').classList.remove('show'); }
 
@@ -924,7 +924,14 @@ async function loadData() {
   } catch (e) {
     console.error(e);
     if (!initData) {
-      showToast('Не удалось подтвердить сессию Telegram. Закройте приложение и откройте заново через кнопку в боте.');
+      const diag =
+        'hasTelegramObj=' + !!window.Telegram +
+        ' hasWebApp=' + !!(window.Telegram && window.Telegram.WebApp) +
+        ' platform=' + (tg.platform || 'н/д') +
+        ' version=' + (tg.version || 'н/д') +
+        ' initDataLen=' + (tg.initData ? tg.initData.length : 0);
+      showToast('Сессия Telegram не подтверждена. [' + diag + ']');
+      console.error('DIAG:', diag);
     } else {
       showToast('Не удалось обновить данные. Проверьте соединение и потяните вниз для обновления.');
     }
