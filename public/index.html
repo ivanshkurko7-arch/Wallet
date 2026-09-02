@@ -7,12 +7,12 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0b0d1a;
+    --bg: #0a1410;
     --text: #ffffff;
-    --hint: #8a8fa8;
+    --hint: #8fa89c;
     --card: rgba(255,255,255,0.05);
-    --purple: #7c5cff;
-    --pink: #ff5ea8;
+    --purple: #10b981;
+    --pink: #34d399;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
   body {
@@ -23,8 +23,8 @@
 
   .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; }
   .topbar .icon-btn {
-    width: 36px; height: 36px; border-radius: 12px; background: rgba(255,255,255,0.06);
-    display:flex; align-items:center; justify-content:center; font-size: 16px; border: none; color: white;
+    width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.06);
+    display:flex; align-items:center; justify-content:center; font-size: 16px; border: 1px solid rgba(255,255,255,0.08); color: white;
   }
   .topbar .title { font-size: 17px; font-weight: 800; }
 
@@ -39,24 +39,34 @@
   .period-all-btn.active { background: var(--purple); color: white; border-color: var(--purple); }
 
   .balance-card {
-    background: radial-gradient(circle at 100% 0%, #3d2e8c 0%, transparent 55%),
-                linear-gradient(160deg, #1c1440 0%, #2a1a52 45%, #3c1740 100%);
+    background: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.12) 0%, transparent 45%),
+                linear-gradient(150deg, #6a5ce8 0%, #5245c4 45%, #2f2570 100%);
     background-size: cover; background-position: center;
     border-radius: 22px; padding: 20px; margin-bottom: 12px; position: relative; overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.06); min-height: 150px;
+    border: 1px solid rgba(255,255,255,0.08); min-height: 150px;
   }
-  .balance-card .house { position: absolute; right: 8px; top: 8px; width: 92px; height: 92px; opacity: 0.95; }
-  .balance-label { font-size: 12px; color: var(--hint); display:flex; align-items:center; gap:5px; }
-  .balance { font-size: 32px; font-weight: 800; margin: 6px 0 4px; letter-spacing: -0.5px; text-shadow: 0 1px 6px rgba(0,0,0,0.4); }
-  .balance-delta { font-size: 12px; color: #bff2d2; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+  .balance-card .house { position: absolute; right: 14px; top: 18px; width: 108px; height: 108px; }
+  .balance-label { font-size: 12px; color: rgba(255,255,255,0.75); display:flex; align-items:center; gap:5px; }
+  .balance { font-size: 32px; font-weight: 800; margin: 6px 0 10px; letter-spacing: -0.5px; text-shadow: 0 1px 6px rgba(0,0,0,0.4); }
+  .balance-badge {
+    display:inline-flex; align-items:center; background: rgba(16,185,129,0.22); color: #6ee7b7;
+    border: 1px solid rgba(110,231,183,0.3); border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 700;
+  }
+  .balance-badge.negative { background: rgba(255,107,129,0.2); color: #ffb3c0; border-color: rgba(255,179,192,0.3); }
+  .balance-period-caption { font-size: 11.5px; color: rgba(255,255,255,0.55); margin-top: 8px; }
+
+  .receipt-scan-btn {
+    position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 12px;
+    background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 15px;
+  }
 
   .bg-edit-btn {
-    position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border-radius: 10px;
-    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 14px;
+    position: absolute; right: 10px; top: 10px; width: 30px; height: 30px; border-radius: 10px;
+    background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 13px;
   }
   .bg-reset-btn {
-    position: absolute; right: 48px; bottom: 10px; width: 32px; height: 32px; border-radius: 10px;
-    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 13px; display: none;
+    position: absolute; right: 46px; top: 10px; width: 30px; height: 30px; border-radius: 10px;
+    background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 12px; display: none;
   }
 
   .avatar-row { display:flex; align-items:center; margin-top: 16px; }
@@ -69,19 +79,30 @@
 
   .action-row { display:flex; gap: 8px; margin-bottom: 12px; }
   .action-btn {
-    flex: 1; background: var(--card); border-radius: 16px; padding: 12px 6px; text-align: center;
+    flex: 1; background: var(--card); border-radius: 16px; padding: 14px 6px 12px; text-align: center;
     border: none; color: white; font-family: inherit; cursor: pointer;
   }
-  .action-btn .ic { font-size: 18px; margin-bottom: 5px; }
   .action-btn .lb { font-size: 10.5px; color: var(--hint); }
+
+  .ic-badge {
+    width: 38px; height: 38px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+    font-size: 17px; margin: 0 auto 7px;
+  }
+  .badge-green { background: rgba(16,185,129,0.16); color: #34d399; }
+  .badge-blue { background: rgba(59,130,246,0.16); color: #60a5fa; }
+  .badge-purple { background: rgba(139,92,246,0.16); color: #a78bfa; }
+  .badge-orange { background: rgba(249,115,22,0.16); color: #fb923c; }
 
   .section-card {
     background: var(--card); border-radius: 18px; padding: 16px; margin-bottom: 12px;
     border: none; width: 100%; text-align: left; color: white; font-family: inherit; display: block;
   }
-  .section-head { display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; }
+  .section-head { display:flex; align-items:center; gap: 12px; margin-bottom: 12px; }
+  .section-head .sh-icon { flex-shrink: 0; margin: 0; }
+  .section-head .sh-text { flex: 1; min-width: 0; }
   .section-head .h { font-size: 14.5px; font-weight: 700; }
-  .section-head .more { font-size: 11.5px; color: var(--hint); }
+  .section-head .sub { font-size: 11.5px; color: var(--hint); margin-top: 2px; }
+  .section-head .more { font-size: 11.5px; color: #a78bfa; white-space: nowrap; flex-shrink: 0; }
 
   .donut-wrap { display:flex; align-items:center; gap: 16px; }
   .donut-legend { flex:1; min-width:0; }
@@ -342,27 +363,37 @@
 
 <div class="balance-card" id="balanceCard">
   <svg class="house" id="houseIcon" viewBox="0 0 100 100" fill="none">
-    <path d="M50 15 L88 45 L82 45 L82 85 L18 85 L18 45 L12 45 Z" fill="#ffffff" opacity="0.10"/>
-    <circle cx="50" cy="55" r="10" fill="#ff5ea8" opacity="0.55"/>
+    <path d="M50 15 L88 45 L82 45 L82 85 L18 85 L18 45 L12 45 Z" fill="#ffffff" opacity="0.16"/>
+    <path d="M50 15 L88 45 L82 45 L82 85 L18 85 L18 45 L12 45 Z" fill="#ffffff" opacity="0.10" transform="translate(3,3)"/>
+    <circle cx="50" cy="55" r="10" fill="#34d399" opacity="0.85"/>
+    <circle cx="72" cy="78" r="13" fill="#fcd34d" opacity="0.9"/>
+    <circle cx="82" cy="82" r="13" fill="#fbbf24" opacity="0.85"/>
+    <circle cx="77" cy="72" r="13" fill="#f59e0b" opacity="0.8"/>
   </svg>
   <div class="balance-label">👁 Общий баланс</div>
   <div class="balance" id="balance">—</div>
-  <div class="balance-delta" id="balanceSub"></div>
+  <div><span class="balance-badge" id="balanceBadge"></span></div>
+  <div class="balance-period-caption">за период</div>
   <div class="avatar-row" id="avatarRow"></div>
   <button class="bg-reset-btn" id="bgResetBtn" onclick="resetBackground(event)">✕</button>
   <button class="bg-edit-btn" onclick="pickBackground(event)">🖼</button>
+  <button class="receipt-scan-btn" onclick="event.stopPropagation(); triggerReceiptPicker()">📷</button>
 </div>
 <input type="file" id="bgFileInput" accept="image/*" style="display:none">
 
 <div class="action-row">
-  <button class="action-btn" onclick="openSheet('expense')"><div class="ic">➕</div><div class="lb">Добавить</div></button>
-  <button class="action-btn" onclick="showInvite()"><div class="ic">🔗</div><div class="lb">Пригласить</div></button>
-  <button class="action-btn" onclick="openModal('storage')"><div class="ic">🏦</div><div class="lb">Хранение</div></button>
-  <button class="action-btn" onclick="openModal('tx')"><div class="ic">📋</div><div class="lb">История</div></button>
+  <button class="action-btn" onclick="openSheet('expense')"><div class="ic-badge badge-green">➕</div><div class="lb">Добавить</div></button>
+  <button class="action-btn" onclick="showInvite()"><div class="ic-badge badge-blue">🔗</div><div class="lb">Пригласить</div></button>
+  <button class="action-btn" onclick="openModal('storage')"><div class="ic-badge badge-purple">🏦</div><div class="lb">Хранение</div></button>
+  <button class="action-btn" onclick="openModal('tx')"><div class="ic-badge badge-orange">📋</div><div class="lb">История</div></button>
 </div>
 
 <button class="section-card" onclick="openModal('analytics')">
-  <div class="section-head"><div class="h">Расходы по категориям</div><div class="more">Подробнее ></div></div>
+  <div class="section-head">
+    <div class="ic-badge badge-green sh-icon">🥧</div>
+    <div class="sh-text"><div class="h">Расходы по категориям</div><div class="sub">Анализируйте свои траты</div></div>
+    <div class="more">Подробнее ></div>
+  </div>
   <div class="donut-wrap">
     <svg id="donutSvg" width="108" height="108" viewBox="0 0 108 108"></svg>
     <div class="donut-legend" id="categories"></div>
@@ -370,22 +401,38 @@
 </button>
 
 <button class="section-card" id="budgetsPreviewCard" onclick="openModal('budgets')" style="display:none;">
-  <div class="section-head"><div class="h">Бюджеты этого месяца</div><div class="more">Все ></div></div>
+  <div class="section-head">
+    <div class="ic-badge badge-orange sh-icon">📊</div>
+    <div class="sh-text"><div class="h">Бюджеты этого месяца</div><div class="sub">Лимиты по категориям</div></div>
+    <div class="more">Все ></div>
+  </div>
   <div id="budgetsPreview"></div>
 </button>
 
 <button class="section-card" onclick="openModal('family')">
-  <div class="section-head"><div class="h">Кто сколько потратил</div><div class="more">Подробнее ></div></div>
+  <div class="section-head">
+    <div class="ic-badge badge-blue sh-icon">👥</div>
+    <div class="sh-text"><div class="h">Кто сколько потратил</div><div class="sub">Отчёты по участникам</div></div>
+    <div class="more">Подробнее ></div>
+  </div>
   <div class="member-list" id="members"></div>
 </button>
 
 <button class="section-card" onclick="openModal('storage')">
-  <div class="section-head"><div class="h">Где хранятся деньги</div><div class="more">Подробнее ></div></div>
+  <div class="section-head">
+    <div class="ic-badge badge-purple sh-icon">💳</div>
+    <div class="sh-text"><div class="h">Где хранятся деньги</div><div class="sub">Ваши счета и кошельки</div></div>
+    <div class="more">Подробнее ></div>
+  </div>
   <div id="storagePreview"></div>
 </button>
 
 <button class="section-card" onclick="openModal('tx')">
-  <div class="section-head"><div class="h">Последние операции</div><div class="more">Все ></div></div>
+  <div class="section-head">
+    <div class="ic-badge badge-orange sh-icon">📄</div>
+    <div class="sh-text"><div class="h">Последние операции</div><div class="sub">История трат и доходов</div></div>
+    <div class="more">Все ></div>
+  </div>
   <div id="transactionsPreview"></div>
 </button>
 
@@ -520,7 +567,28 @@ const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp 
 };
 try { tg.ready(); tg.expand(); } catch (e) { console.error(e); }
 
-const initData = tg.initData || "";
+let initData = tg.initData || "";
+
+// Иногда скрипт telegram-web-app.js не успевает полностью инициализироваться (медленная сеть и т.п.),
+// и initData на первый момент оказывается пустым. Даём ему до 2 секунд шанс появиться,
+// прежде чем показывать ошибку и работать с пустыми данными.
+function waitForInitData(maxWaitMs) {
+  return new Promise(function (resolve) {
+    if (initData) { resolve(); return; }
+    const start = Date.now();
+    const iv = setInterval(function () {
+      const fresh = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || '';
+      if (fresh) {
+        initData = fresh;
+        clearInterval(iv);
+        resolve();
+      } else if (Date.now() - start > maxWaitMs) {
+        clearInterval(iv);
+        resolve(); // не дождались — идём дальше с тем, что есть (ошибку покажет сам loadData)
+      }
+    }, 100);
+  });
+}
 let currentType = "expense";
 let selectedCategory = null;
 let selectedAccount = null;
@@ -738,7 +806,7 @@ function renderBarChart(container, buckets, maxHeightPx) {
   html += '</div>';
   container.innerHTML = html;
 }
-const COLORS = ['#7c5cff', '#3ea6ff', '#ffb84d', '#ff5ea8', '#5be08a', '#ff6b6b', '#4dd0e1', '#c084fc'];
+const COLORS = ['#10b981', '#3ea6ff', '#ffb84d', '#34d399', '#a3e635', '#ff6b6b', '#4dd0e1', '#c084fc'];
 
 async function api(path, opts) {
   opts = opts || {};
@@ -813,9 +881,17 @@ async function loadData() {
       accountsWereLocal = true;
     }
 
-    document.getElementById('balance').textContent = fmt(summary.overall_balance != null ? summary.overall_balance : summary.balance) + ' ₴';
-    document.getElementById('balanceSub').textContent =
-      (periodAll ? 'Доход ' : 'За период: доход ') + fmt(summary.total_income) + ' ₴ · Расход ' + fmt(summary.total_expense) + ' ₴';
+    const overallBalance = summary.overall_balance != null ? summary.overall_balance : summary.balance;
+    document.getElementById('balance').textContent = fmt(overallBalance) + ' ₴';
+
+    const periodNet = summary.total_income - summary.total_expense;
+    const baseBalance = overallBalance - periodNet;
+    const pct = baseBalance !== 0 ? (periodNet / Math.abs(baseBalance)) * 100 : null;
+    const badge = document.getElementById('balanceBadge');
+    const sign = periodNet >= 0 ? '+' : '−';
+    badge.textContent = sign + fmt(Math.abs(periodNet)) + ' ₴' + (pct != null ? ' (' + Math.abs(pct).toFixed(2) + '%)' : '');
+    badge.className = 'balance-badge' + (periodNet < 0 ? ' negative' : '');
+
     document.getElementById('inviteCode').textContent = summary.invite_code;
 
     const avatarRow = document.getElementById('avatarRow');
@@ -847,7 +923,11 @@ async function loadData() {
     refreshBudgetsPreview();
   } catch (e) {
     console.error(e);
-    showToast('Не удалось обновить данные. Проверьте соединение и потяните вниз для обновления.');
+    if (!initData) {
+      showToast('Не удалось подтвердить сессию Telegram. Закройте приложение и откройте заново через кнопку в боте.');
+    } else {
+      showToast('Не удалось обновить данные. Проверьте соединение и потяните вниз для обновления.');
+    }
   }
 }
 
@@ -1683,6 +1763,9 @@ function renderSettingsModal(body) {
     '<div class="settings-group-label">Быстрый ввод</div>' +
     '<button class="list-row" onclick="openModal(\'shortcut\')"><div class="lr-name">Шорткат</div><div class="lr-val">Ввод в одно касание</div><div class="lr-chev">›</div></button>' +
 
+    '<div class="settings-group-label">Данные</div>' +
+    '<button class="list-row" id="exportCsvBtn" onclick="exportTransactionsCSV()"><div class="lr-name">Экспорт операций в CSV</div><div class="lr-chev">⬇</div></button>' +
+
     '<div class="settings-group-label">Ещё</div>' +
     '<button class="list-row" onclick="tg.showAlert(\'Напишите нам, если возникли вопросы — мы поможем.\')"><div class="lr-name">Помощь и поддержка</div><div class="lr-chev">›</div></button>' +
     '<button class="list-row" onclick="tg.showAlert(\'Пользовательское соглашение доступно по запросу у команды приложения.\')"><div class="lr-name">Пользовательское соглашение</div><div class="lr-chev">›</div></button>' +
@@ -1882,24 +1965,29 @@ function handleReceiptFile(e) {
   reader.readAsDataURL(file);
 }
 let receiptItems = [];
+let receiptNeedsReview = false;
+let receiptDetectedTotal = null;
 async function processReceiptImage(base64, mediaType) {
   promptMode = 'receipt';
   document.getElementById('promptTitle').textContent = 'Скан чека';
   document.getElementById('promptBody').innerHTML = '<div class="empty">Читаю чек…</div>';
   openPrompt();
   try {
-    const items = await api('/api/receipt', {
+    const result = await api('/api/receipt', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         init_data: initData, image: base64, media_type: mediaType,
         categories: { expense: expenseCategories.map(function (c) { return c.name; }) }
       })
     });
+    const items = result.items || [];
     if (!items.length) {
       document.getElementById('promptBody').innerHTML = '<div class="empty">Не получилось распознать чек. Попробуйте более чёткое фото.</div>';
       return;
     }
     receiptItems = items.map(function (it) { return { category: it.category || 'Прочее', amount: Number(it.amount) || 0, comment: it.comment || '' }; });
+    receiptNeedsReview = !!result.needsReview;
+    receiptDetectedTotal = result.total;
     renderReceiptReview();
   } catch (e) {
     console.error(e);
@@ -1910,6 +1998,15 @@ function renderReceiptReview() {
   const catNames = expenseCategories.map(function (c) { return c.name; });
   const body = document.getElementById('promptBody');
   body.innerHTML = '';
+  if (receiptNeedsReview) {
+    const warn = document.createElement('div');
+    warn.className = 'card-hint';
+    warn.style.cssText = 'background:rgba(255,107,129,0.14); color:#ffb3c0; padding:10px 12px; border-radius:12px; margin-bottom:12px;';
+    warn.textContent = '⚠️ Сумма позиций не совпадает с итогом чека' +
+      (receiptDetectedTotal != null ? ' (на чеке: ' + fmt(receiptDetectedTotal) + ' ₴)' : '') +
+      ' — внимательно проверьте цифры перед сохранением.';
+    body.appendChild(warn);
+  }
   receiptItems.forEach(function (item, i) {
     const row = document.createElement('div');
     row.className = 'receipt-item';
@@ -1962,8 +2059,50 @@ async function saveAllReceiptItems() {
   }
 }
 
+/* ===== Экспорт операций в CSV ===== */
+async function exportTransactionsCSV() {
+  const btn = document.getElementById('exportCsvBtn');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<div class="lr-name">Собираю операции…</div>';
+  try {
+    const all = await api('/api/transactions?init_data=' + encodeURIComponent(initData) + '&limit=5000');
+    if (!all.length) { tg.showAlert('Пока нет ни одной операции для экспорта.'); return; }
+
+    const header = ['Дата', 'Время', 'Тип', 'Категория', 'Счёт', 'Сумма', 'Комментарий', 'Кто добавил'];
+    const escCsv = function (v) {
+      const s = String(v == null ? '' : v);
+      return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const rows = all.map(function (t) {
+      const d = new Date(t.created_at * 1000);
+      const dateStr = d.toLocaleDateString('ru-RU');
+      const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const typeStr = t.type === 'expense' ? 'Расход' : 'Доход';
+      const who = t.first_name || t.username || '';
+      return [dateStr, timeStr, typeStr, t.category, t.account || 'Наличные', t.amount, t.comment || '', who].map(escCsv).join(';');
+    });
+    const csv = '\uFEFF' + header.join(';') + '\n' + rows.join('\n'); // BOM — чтобы Excel корректно показал кириллицу
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wallet-operations-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+    tg.HapticFeedback.notificationOccurred('success');
+  } catch (e) {
+    console.error(e);
+    showToast('Не удалось выгрузить операции');
+  } finally {
+    btn.innerHTML = origText;
+  }
+}
+
 updatePeriodLabel();
-loadData();
+waitForInitData(2000).then(function () { loadData(); });
 </script>
 </body>
 </html>
