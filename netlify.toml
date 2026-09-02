@@ -31,3 +31,6 @@
   from = "/webhook"
   to = "/.netlify/functions/webhook"
   status = 200
+
+[functions."reminder-cron"]
+  schedule = "0 17 * * *"
