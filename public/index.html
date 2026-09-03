@@ -358,7 +358,7 @@
     <div class="label" id="periodLabel">—</div>
     <button onclick="shiftMonth(1)">›</button>
   </div>
-  <button class="period-all-btn" id="periodAllBtn" onclick="togglePeriodAll()">Всё время</button>
+  <button class="period-all-btn" id="periodAllBtn" onclick="togglePeriodAll()" data-i18n="allTime">Всё время</button>
 </div>
 
 <div class="balance-card" id="balanceCard">
@@ -370,10 +370,10 @@
     <circle cx="82" cy="82" r="13" fill="#fbbf24" opacity="0.85"/>
     <circle cx="77" cy="72" r="13" fill="#f59e0b" opacity="0.8"/>
   </svg>
-  <div class="balance-label">👁 Общий баланс</div>
+  <div class="balance-label">👁 <span data-i18n="totalBalance">Общий баланс</span></div>
   <div class="balance" id="balance">—</div>
   <div><span class="balance-badge" id="balanceBadge"></span></div>
-  <div class="balance-period-caption">за период</div>
+  <div class="balance-period-caption" data-i18n="forPeriod">за период</div>
   <div class="avatar-row" id="avatarRow"></div>
   <button class="bg-reset-btn" id="bgResetBtn" onclick="resetBackground(event)">✕</button>
   <button class="bg-edit-btn" onclick="pickBackground(event)">🖼</button>
@@ -382,17 +382,17 @@
 <input type="file" id="bgFileInput" accept="image/*" style="display:none">
 
 <div class="action-row">
-  <button class="action-btn" onclick="openSheet('expense')"><div class="ic-badge badge-green">➕</div><div class="lb">Добавить</div></button>
-  <button class="action-btn" onclick="showInvite()"><div class="ic-badge badge-blue">🔗</div><div class="lb">Пригласить</div></button>
-  <button class="action-btn" onclick="openModal('storage')"><div class="ic-badge badge-purple">🏦</div><div class="lb">Хранение</div></button>
-  <button class="action-btn" onclick="openModal('tx')"><div class="ic-badge badge-orange">📋</div><div class="lb">История</div></button>
+  <button class="action-btn" onclick="openSheet('expense')"><div class="ic-badge badge-green">➕</div><div class="lb" data-i18n="add">Добавить</div></button>
+  <button class="action-btn" onclick="showInvite()"><div class="ic-badge badge-blue">🔗</div><div class="lb" data-i18n="invite">Пригласить</div></button>
+  <button class="action-btn" onclick="openModal('storage')"><div class="ic-badge badge-purple">🏦</div><div class="lb" data-i18n="storage">Хранение</div></button>
+  <button class="action-btn" onclick="openModal('tx')"><div class="ic-badge badge-orange">📋</div><div class="lb" data-i18n="history">История</div></button>
 </div>
 
 <button class="section-card" onclick="openModal('analytics')">
   <div class="section-head">
     <div class="ic-badge badge-green sh-icon">🥧</div>
-    <div class="sh-text"><div class="h">Расходы по категориям</div><div class="sub">Анализируйте свои траты</div></div>
-    <div class="more">Подробнее ></div>
+    <div class="sh-text"><div class="h" data-i18n="expensesByCategory">Расходы по категориям</div><div class="sub" data-i18n="analyzeSpending">Анализируйте свои траты</div></div>
+    <div class="more" data-i18n="more">Подробнее ></div>
   </div>
   <div class="donut-wrap">
     <svg id="donutSvg" width="108" height="108" viewBox="0 0 108 108"></svg>
@@ -403,8 +403,8 @@
 <button class="section-card" id="budgetsPreviewCard" onclick="openModal('budgets')" style="display:none;">
   <div class="section-head">
     <div class="ic-badge badge-orange sh-icon">📊</div>
-    <div class="sh-text"><div class="h">Бюджеты этого месяца</div><div class="sub">Лимиты по категориям</div></div>
-    <div class="more">Все ></div>
+    <div class="sh-text"><div class="h" data-i18n="budgetsThisMonth">Бюджеты этого месяца</div><div class="sub" data-i18n="categoryLimits">Лимиты по категориям</div></div>
+    <div class="more" data-i18n="all">Все ></div>
   </div>
   <div id="budgetsPreview"></div>
 </button>
@@ -412,8 +412,8 @@
 <button class="section-card" onclick="openModal('family')">
   <div class="section-head">
     <div class="ic-badge badge-blue sh-icon">👥</div>
-    <div class="sh-text"><div class="h">Кто сколько потратил</div><div class="sub">Отчёты по участникам</div></div>
-    <div class="more">Подробнее ></div>
+    <div class="sh-text"><div class="h" data-i18n="whoSpentHowMuch">Кто сколько потратил</div><div class="sub" data-i18n="memberReports">Отчёты по участникам</div></div>
+    <div class="more" data-i18n="more">Подробнее ></div>
   </div>
   <div class="member-list" id="members"></div>
 </button>
@@ -421,8 +421,8 @@
 <button class="section-card" onclick="openModal('storage')">
   <div class="section-head">
     <div class="ic-badge badge-purple sh-icon">💳</div>
-    <div class="sh-text"><div class="h">Где хранятся деньги</div><div class="sub">Ваши счета и кошельки</div></div>
-    <div class="more">Подробнее ></div>
+    <div class="sh-text"><div class="h" data-i18n="whereMoneyKept">Где хранятся деньги</div><div class="sub" data-i18n="accountsAndWallets">Ваши счета и кошельки</div></div>
+    <div class="more" data-i18n="more">Подробнее ></div>
   </div>
   <div id="storagePreview"></div>
 </button>
@@ -430,25 +430,25 @@
 <button class="section-card" onclick="openModal('tx')">
   <div class="section-head">
     <div class="ic-badge badge-orange sh-icon">📄</div>
-    <div class="sh-text"><div class="h">Последние операции</div><div class="sub">История трат и доходов</div></div>
-    <div class="more">Все ></div>
+    <div class="sh-text"><div class="h" data-i18n="recentTransactions">Последние операции</div><div class="sub" data-i18n="incomeExpenseHistory">История трат и доходов</div></div>
+    <div class="more" data-i18n="all">Все ></div>
   </div>
   <div id="transactionsPreview"></div>
 </button>
 
 <div class="section-card">
   <div class="invite-row">
-    <span>Код приглашения партнёра</span>
+    <span data-i18n="partnerInviteCode">Код приглашения партнёра</span>
     <code id="inviteCode">—</code>
   </div>
 </div>
 
 <div class="bottom-nav">
-  <button class="nav-item active" id="navHome" onclick="closeModal()"><div class="ic">🏠</div>Главная</button>
-  <button class="nav-item" onclick="openModal('tx')"><div class="ic">📋</div>Операции</button>
+  <button class="nav-item active" id="navHome" onclick="closeModal()"><div class="ic">🏠</div><span data-i18n="navHomeLabel">Главная</span></button>
+  <button class="nav-item" onclick="openModal('tx')"><div class="ic">📋</div><span data-i18n="navTxLabel">Операции</span></button>
   <button class="nav-fab" onclick="openSheet('expense')">+</button>
-  <button class="nav-item" onclick="openModal('analytics')"><div class="ic">📊</div>Аналитика</button>
-  <button class="nav-item" onclick="openModal('family')"><div class="ic">👥</div>Семья</button>
+  <button class="nav-item" onclick="openModal('analytics')"><div class="ic">📊</div><span data-i18n="navAnalyticsLabel">Аналитика</span></button>
+  <button class="nav-item" onclick="openModal('family')"><div class="ic">👥</div><span data-i18n="navFamilyLabel">Семья</span></button>
 </div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeOnModalOverlay(event)">
@@ -514,20 +514,20 @@
 <div class="sheet-overlay" id="menuOverlay" onclick="closeOnMenuOverlay(event)">
   <div class="sheet">
     <div class="sheet-head">
-      <h2>Меню</h2>
+      <h2 data-i18n="menuTitle">Меню</h2>
       <button class="sheet-close" onclick="closeMenu()">✕</button>
     </div>
     <div style="margin-top: 14px;">
-      <button class="menu-item" onclick="closeMenu(); openModal('categories')"><span class="ic">🏷️</span><span class="lb">Категории</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); triggerReceiptPicker()"><span class="ic">📷</span><span class="lb">Скан чека</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openModal('accounts')"><span class="ic">🏦</span><span class="lb">Счета</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openTransferSheet()"><span class="ic">🔁</span><span class="lb">Перевод между счетами</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openModal('budgets')"><span class="ic">📊</span><span class="lb">Бюджеты</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openModal('shortcut')"><span class="ic">⚡</span><span class="lb">Быстрый ввод</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openModal('settings')"><span class="ic">⚙️</span><span class="lb">Настройки</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); startOnboarding()"><span class="ic">💡</span><span class="lb">Как пользоваться</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); showInvite()"><span class="ic">🔗</span><span class="lb">Пригласить партнёра</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openJoinPrompt()"><span class="ic">🔑</span><span class="lb">Ввести код партнёра</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('categories')"><span class="ic">🏷️</span><span class="lb" data-i18n="menuCategories">Категории</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); triggerReceiptPicker()"><span class="ic">📷</span><span class="lb" data-i18n="menuScanReceipt">Скан чека</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('accounts')"><span class="ic">🏦</span><span class="lb" data-i18n="menuAccounts">Счета</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openTransferSheet()"><span class="ic">🔁</span><span class="lb" data-i18n="menuTransfer">Перевод между счетами</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('budgets')"><span class="ic">📊</span><span class="lb" data-i18n="menuBudgets">Бюджеты</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('shortcut')"><span class="ic">⚡</span><span class="lb" data-i18n="menuShortcut">Быстрый ввод</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('settings')"><span class="ic">⚙️</span><span class="lb" data-i18n="menuSettings">Настройки</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); startOnboarding()"><span class="ic">💡</span><span class="lb" data-i18n="menuHowToUse">Как пользоваться</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); showInvite()"><span class="ic">🔗</span><span class="lb" data-i18n="menuInvitePartner">Пригласить партнёра</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openJoinPrompt()"><span class="ic">🔑</span><span class="lb" data-i18n="menuEnterCode">Ввести код партнёра</span><span class="chev">›</span></button>
     </div>
   </div>
 </div>
@@ -620,12 +620,15 @@ const DEFAULT_INCOME_CATEGORIES = [
   { name: 'Прочие доходы', icon: '🎁', system: true }
 ];
 const DEFAULT_ACCOUNTS = [
-  { name: 'Карта', icon: '💳', system: false },
-  { name: 'Наличные', icon: '💵', system: true },
-  { name: 'Валюта', icon: '💱', system: false },
-  { name: 'Крипта', icon: '₿', system: false },
-  { name: 'Другое', icon: '📦', system: false }
+  { name: 'Карта', icon: '💳', system: false, currency: 'UAH', bank: '', balance: null, isCredit: false },
+  { name: 'Наличные', icon: '💵', system: true, currency: 'UAH', bank: '', balance: null, isCredit: false },
+  { name: 'Валюта', icon: '💱', system: false, currency: 'USD', bank: '', balance: null, isCredit: false },
+  { name: 'Крипта', icon: '₿', system: false, currency: 'USD', bank: '', balance: null, isCredit: false },
+  { name: 'Другое', icon: '📦', system: false, currency: 'UAH', bank: '', balance: null, isCredit: false }
 ];
+const CURRENCY_OPTIONS = ['UAH', 'USD', 'EUR', 'GBP', 'PLN'];
+const CURRENCY_SYMBOLS = { UAH: '₴', USD: '$', EUR: '€', GBP: '£', PLN: 'zł' };
+function currencySymbol(code) { return CURRENCY_SYMBOLS[code] || (code || '₴'); }
 const CATEGORY_LIMIT = 50;
 
 function loadJSON(key, fallback) {
@@ -638,8 +641,112 @@ let incomeCategories = loadJSON('walletIncomeCategories', DEFAULT_INCOME_CATEGOR
 let accounts = loadJSON('walletAccounts', null);
 let accountsWereLocal = !!accounts;
 if (!accounts) accounts = DEFAULT_ACCOUNTS.slice();
+// Докидываем новые поля тем, у кого счета сохранены ещё в старом формате (без валюты/банка/баланса)
+accounts.forEach(function (a) {
+  if (a.currency == null) a.currency = 'UAH';
+  if (a.bank == null) a.bank = '';
+  if (a.balance === undefined) a.balance = null;
+  if (a.isCredit == null) a.isCredit = false;
+});
 let budgets = loadJSON('walletBudgets', {});
 let walletTheme = localStorage.getItem('walletTheme') || 'system';
+
+/* ===== Язык интерфейса ===== */
+let walletLang = localStorage.getItem('walletLang') || 'ru';
+const LANG_NAMES = { ru: 'Русский', uk: 'Українська', en: 'English', de: 'Deutsch' };
+const TRANSLATIONS = {
+  ru: {
+    allTime: 'Всё время', totalBalance: 'Общий баланс', forPeriod: 'за период',
+    add: 'Добавить', invite: 'Пригласить', storage: 'Хранение', history: 'История',
+    expensesByCategory: 'Расходы по категориям', analyzeSpending: 'Анализируйте свои траты',
+    budgetsThisMonth: 'Бюджеты этого месяца', categoryLimits: 'Лимиты по категориям',
+    whoSpentHowMuch: 'Кто сколько потратил', memberReports: 'Отчёты по участникам',
+    whereMoneyKept: 'Где хранятся деньги', accountsAndWallets: 'Ваши счета и кошельки',
+    recentTransactions: 'Последние операции', incomeExpenseHistory: 'История трат и доходов',
+    more: 'Подробнее >', all: 'Все >', partnerInviteCode: 'Код приглашения партнёра',
+    navHomeLabel: 'Главная', navTxLabel: 'Операции', navAnalyticsLabel: 'Аналитика', navFamilyLabel: 'Семья',
+    menuCategories: 'Категории', menuScanReceipt: 'Скан чека', menuAccounts: 'Счета',
+    menuTransfer: 'Перевод между счетами', menuBudgets: 'Бюджеты', menuShortcut: 'Быстрый ввод',
+    menuSettings: 'Настройки', menuHowToUse: 'Как пользоваться', menuInvitePartner: 'Пригласить партнёра',
+    menuEnterCode: 'Ввести код партнёра', menuTitle: 'Меню',
+    modalTx: 'Все операции', modalAnalytics: 'Аналитика расходов', modalFamily: 'Семья',
+    modalStorage: 'Где хранятся деньги', modalCategories: 'Категории', modalAccounts: 'Счета',
+    modalBudgets: 'Бюджеты', modalShortcut: 'Шорткат', modalSettings: 'Настройки',
+    settingsLanguage: 'Язык интерфейса'
+  },
+  uk: {
+    allTime: 'Весь час', totalBalance: 'Загальний баланс', forPeriod: 'за період',
+    add: 'Додати', invite: 'Запросити', storage: 'Зберігання', history: 'Історія',
+    expensesByCategory: 'Витрати за категоріями', analyzeSpending: 'Аналізуйте свої витрати',
+    budgetsThisMonth: 'Бюджети цього місяця', categoryLimits: 'Ліміти за категоріями',
+    whoSpentHowMuch: 'Хто скільки витратив', memberReports: 'Звіти по учасниках',
+    whereMoneyKept: 'Де зберігаються гроші', accountsAndWallets: 'Ваші рахунки та гаманці',
+    recentTransactions: 'Останні операції', incomeExpenseHistory: 'Історія витрат і доходів',
+    more: 'Детальніше >', all: 'Усі >', partnerInviteCode: 'Код запрошення партнера',
+    navHomeLabel: 'Головна', navTxLabel: 'Операції', navAnalyticsLabel: 'Аналітика', navFamilyLabel: 'Родина',
+    menuCategories: 'Категорії', menuScanReceipt: 'Скан чека', menuAccounts: 'Рахунки',
+    menuTransfer: 'Переказ між рахунками', menuBudgets: 'Бюджети', menuShortcut: 'Швидке введення',
+    menuSettings: 'Налаштування', menuHowToUse: 'Як користуватися', menuInvitePartner: 'Запросити партнера',
+    menuEnterCode: 'Ввести код партнера', menuTitle: 'Меню',
+    modalTx: 'Всі операції', modalAnalytics: 'Аналітика витрат', modalFamily: 'Родина',
+    modalStorage: 'Де зберігаються гроші', modalCategories: 'Категорії', modalAccounts: 'Рахунки',
+    modalBudgets: 'Бюджети', modalShortcut: 'Шорткат', modalSettings: 'Налаштування',
+    settingsLanguage: 'Мова інтерфейсу'
+  },
+  en: {
+    allTime: 'All time', totalBalance: 'Total balance', forPeriod: 'for period',
+    add: 'Add', invite: 'Invite', storage: 'Storage', history: 'History',
+    expensesByCategory: 'Expenses by category', analyzeSpending: 'Analyze your spending',
+    budgetsThisMonth: "This month's budgets", categoryLimits: 'Category limits',
+    whoSpentHowMuch: 'Who spent how much', memberReports: 'Member reports',
+    whereMoneyKept: 'Where money is kept', accountsAndWallets: 'Your accounts and wallets',
+    recentTransactions: 'Recent transactions', incomeExpenseHistory: 'Income and expense history',
+    more: 'More >', all: 'All >', partnerInviteCode: 'Partner invite code',
+    navHomeLabel: 'Home', navTxLabel: 'Transactions', navAnalyticsLabel: 'Analytics', navFamilyLabel: 'Family',
+    menuCategories: 'Categories', menuScanReceipt: 'Scan receipt', menuAccounts: 'Accounts',
+    menuTransfer: 'Transfer between accounts', menuBudgets: 'Budgets', menuShortcut: 'Quick input',
+    menuSettings: 'Settings', menuHowToUse: 'How to use', menuInvitePartner: 'Invite partner',
+    menuEnterCode: 'Enter partner code', menuTitle: 'Menu',
+    modalTx: 'All transactions', modalAnalytics: 'Spending analytics', modalFamily: 'Family',
+    modalStorage: 'Where money is kept', modalCategories: 'Categories', modalAccounts: 'Accounts',
+    modalBudgets: 'Budgets', modalShortcut: 'Shortcut', modalSettings: 'Settings',
+    settingsLanguage: 'Interface language'
+  },
+  de: {
+    allTime: 'Gesamte Zeit', totalBalance: 'Gesamtsaldo', forPeriod: 'für den Zeitraum',
+    add: 'Hinzufügen', invite: 'Einladen', storage: 'Konten', history: 'Verlauf',
+    expensesByCategory: 'Ausgaben nach Kategorie', analyzeSpending: 'Analysiere deine Ausgaben',
+    budgetsThisMonth: 'Budgets diesen Monat', categoryLimits: 'Kategorielimits',
+    whoSpentHowMuch: 'Wer hat wie viel ausgegeben', memberReports: 'Berichte der Mitglieder',
+    whereMoneyKept: 'Wo das Geld liegt', accountsAndWallets: 'Deine Konten und Wallets',
+    recentTransactions: 'Letzte Buchungen', incomeExpenseHistory: 'Verlauf von Ausgaben und Einnahmen',
+    more: 'Mehr >', all: 'Alle >', partnerInviteCode: 'Einladungscode für Partner',
+    navHomeLabel: 'Start', navTxLabel: 'Buchungen', navAnalyticsLabel: 'Analyse', navFamilyLabel: 'Familie',
+    menuCategories: 'Kategorien', menuScanReceipt: 'Beleg scannen', menuAccounts: 'Konten',
+    menuTransfer: 'Übertrag zwischen Konten', menuBudgets: 'Budgets', menuShortcut: 'Schnelleingabe',
+    menuSettings: 'Einstellungen', menuHowToUse: 'Anleitung', menuInvitePartner: 'Partner einladen',
+    menuEnterCode: 'Partnercode eingeben', menuTitle: 'Menü',
+    modalTx: 'Alle Buchungen', modalAnalytics: 'Ausgabenanalyse', modalFamily: 'Familie',
+    modalStorage: 'Wo das Geld liegt', modalCategories: 'Kategorien', modalAccounts: 'Konten',
+    modalBudgets: 'Budgets', modalShortcut: 'Shortcut', modalSettings: 'Einstellungen',
+    settingsLanguage: 'Sprache der Oberfläche'
+  }
+};
+function t(key) {
+  return (TRANSLATIONS[walletLang] && TRANSLATIONS[walletLang][key]) || TRANSLATIONS.ru[key] || key;
+}
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+}
+function setWalletLang(lang) {
+  walletLang = lang;
+  localStorage.setItem('walletLang', lang);
+  applyTranslations();
+  if (currentModal) renderModalContent(currentModal);
+}
+
 let walletTimezone = localStorage.getItem('walletTimezone') || 'Europe/Kiev|UTC+3';
 let reminderEnabled = localStorage.getItem('walletReminderEnabled') !== '0';
 let reminderTime = localStorage.getItem('walletReminderTime') || '20:00';
@@ -685,6 +792,7 @@ function applyTheme() {
   if (useLight) document.body.classList.add('theme-light');
 }
 applyTheme();
+applyTranslations();
 if (window.matchMedia) {
   try {
     window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function () {
@@ -875,7 +983,7 @@ async function loadData() {
     if (!accountsWereLocal && summary.accounts && summary.accounts.length) {
       accounts = summary.accounts.map(function (name) {
         const def = DEFAULT_ACCOUNTS.find(function (d) { return d.name === name; });
-        return { name: name, icon: def ? def.icon : '📦', system: false };
+        return { name: name, icon: def ? def.icon : '📦', system: false, currency: def ? def.currency : 'UAH', bank: '', balance: null, isCredit: false };
       });
       persistAccounts();
       accountsWereLocal = true;
@@ -1246,34 +1354,36 @@ function renderModalContent(name) {
   if (!lastSummary) { body.innerHTML = '<div class="empty">Загрузка…</div>'; return; }
   try {
     if (name === 'tx') {
-      title.textContent = 'Все операции';
+      title.textContent = t('modalTx');
       resetTxFilters();
       renderTxModal(body);
     } else if (name === 'analytics') {
-      title.textContent = 'Аналитика расходов';
+      title.textContent = t('modalAnalytics');
       renderModalAnalytics(body);
     } else if (name === 'family') {
-      title.textContent = 'Семья';
+      title.textContent = t('modalFamily');
       renderModalFamily(body);
     } else if (name === 'storage') {
-      title.textContent = 'Где хранятся деньги';
+      title.textContent = t('modalStorage');
       body.innerHTML = '<div id="modalStorageList"></div>' +
-        '<div style="font-size:11.5px; color:var(--hint); margin-top:12px;">Баланс = сумма доходов минус сумма расходов, отмеченных для этого места хранения (за всё время).</div>';
+        '<div style="font-size:11.5px; color:var(--hint); margin-top:12px;">Баланс = сумма доходов минус сумма расходов, отмеченных для этого места хранения (за всё время).</div>' +
+        '<div id="allAccountsPreview"></div>';
       renderStorageList(document.getElementById('modalStorageList'), lastSummary.by_account, true);
+      renderAllAccountsSection(document.getElementById('allAccountsPreview'));
     } else if (name === 'categories') {
-      title.textContent = 'Категории';
+      title.textContent = t('modalCategories');
       renderCategoriesModal(body);
     } else if (name === 'accounts') {
-      title.textContent = 'Счета';
+      title.textContent = t('modalAccounts');
       renderAccountsModal(body);
     } else if (name === 'budgets') {
-      title.textContent = 'Бюджеты';
+      title.textContent = t('modalBudgets');
       renderBudgetsModal(body);
     } else if (name === 'shortcut') {
-      title.textContent = 'Шорткат';
+      title.textContent = t('modalShortcut');
       renderShortcutModal(body);
     } else if (name === 'settings') {
-      title.textContent = 'Настройки';
+      title.textContent = t('modalSettings');
       renderSettingsModal(body);
     }
   } catch (e) {
@@ -1589,13 +1699,17 @@ function renderAccList() {
   accounts.forEach(function (a, i) {
     const row = document.createElement('button');
     row.className = 'cat-row';
+    const sub = [];
+    if (a.bank) sub.push(a.bank);
+    if (a.isCredit) sub.push('кредитный');
+    if (a.balance != null) sub.push(fmt(a.balance) + ' ' + currencySymbol(a.currency));
     row.innerHTML =
       '<div class="cat-icon">' + (a.icon || '📦') + '</div>' +
-      '<div class="cat-name">' + a.name + '</div>' +
+      '<div class="cat-name">' + a.name + (sub.length ? '<div class="lr-sub">' + sub.join(' · ') + '</div>' : '') + '</div>' +
       (a.system ? '<div class="cat-tag">системный</div>' : '') +
       '<div class="cat-chev">›</div>';
     row.onclick = function () {
-      if (a.system) { tg.showAlert('Это системный счёт по умолчанию. Его нельзя удалить, но можно переименовать.'); }
+      if (a.system) { tg.showAlert('Это системный счёт по умолчанию. Его нельзя удалить, но можно переименовать и заполнить данные.'); }
       openAccountPrompt(i);
     };
     listEl.appendChild(row);
@@ -1606,29 +1720,57 @@ function openAccountPrompt(index) {
   promptMode = 'account';
   promptEditingIndex = index;
   const item = index != null ? accounts[index] : null;
+  const currency = item ? (item.currency || 'UAH') : 'UAH';
   document.getElementById('promptTitle').textContent = item ? 'Изменить счёт' : 'Новый счёт';
   document.getElementById('promptBody').innerHTML =
     '<div class="icon-input-row">' +
     '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '💳') + '">' +
     '<input type="text" id="promptName" placeholder="Например: Сберкнижка" value="' + (item ? item.name : '') + '" style="flex:1;">' +
     '</div>' +
-    '<button class="submit-btn" onclick="savePromptAccount()">Сохранить</button>' +
+    '<label>Банк (необязательно)</label>' +
+    '<input type="text" id="promptBank" placeholder="Например: monobank" value="' + (item ? (item.bank || '') : '') + '">' +
+    '<label>Сколько сейчас на счету (необязательно)</label>' +
+    '<input type="number" inputmode="decimal" id="promptBalance" placeholder="Не указано" value="' + (item && item.balance != null ? item.balance : '') + '">' +
+    '<label>Валюта</label>' +
+    '<div class="chip-group" id="promptCurrencyChips"></div>' +
+    '<div class="list-row"><div class="lr-name">Кредитный счёт</div>' +
+    '<label class="toggle-switch"><input type="checkbox" id="promptIsCredit" ' + (item && item.isCredit ? 'checked' : '') + '><span class="slider"></span></label></div>' +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="savePromptAccount()">Сохранить</button>' +
     (item && !item.system && accounts.length > 1 ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptAccount()">Удалить счёт</button>' : '');
+  const chipsEl = document.getElementById('promptCurrencyChips');
+  CURRENCY_OPTIONS.forEach(function (c) {
+    const chip = document.createElement('div');
+    chip.className = 'chip-btn' + (c === currency ? ' selected' : '');
+    chip.textContent = currencySymbol(c) + ' ' + c;
+    chip.dataset.currency = c;
+    chip.onclick = function () {
+      chipsEl.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); });
+      chip.classList.add('selected');
+    };
+    chipsEl.appendChild(chip);
+  });
   openPrompt();
 }
 function savePromptAccount() {
   const icon = document.getElementById('promptIcon').value.trim() || '📦';
   const name = document.getElementById('promptName').value.trim();
   if (!name) { tg.showAlert('Введите название счёта'); return; }
+  const bank = document.getElementById('promptBank').value.trim();
+  const balanceRaw = document.getElementById('promptBalance').value;
+  const balance = balanceRaw.trim() === '' ? null : Number(balanceRaw);
+  const isCredit = document.getElementById('promptIsCredit').checked;
+  const selectedChip = document.querySelector('#promptCurrencyChips .chip-btn.selected');
+  const currency = selectedChip ? selectedChip.dataset.currency : 'UAH';
+  const data = { name: name, icon: icon, bank: bank, balance: balance, isCredit: isCredit, currency: currency };
   if (promptEditingIndex != null) {
-    accounts[promptEditingIndex].name = name;
-    accounts[promptEditingIndex].icon = icon;
+    Object.assign(accounts[promptEditingIndex], data);
   } else {
-    accounts.push({ name: name, icon: icon, system: false });
+    accounts.push(Object.assign({ system: false }, data));
   }
   persistAccounts();
   closePrompt();
   renderAccList();
+  refreshAllAccountsPreview();
   tg.HapticFeedback.notificationOccurred('success');
 }
 function deletePromptAccount() {
@@ -1639,7 +1781,54 @@ function deletePromptAccount() {
     persistAccounts();
     closePrompt();
     renderAccList();
+    refreshAllAccountsPreview();
   });
+}
+
+/* ===== Все счета (расширенная карточка внутри "Хранение") ===== */
+function renderAllAccountsSection(container) {
+  container.innerHTML = '';
+  const head = document.createElement('div');
+  head.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin:16px 0 10px;';
+  head.innerHTML = '<div style="font-size:13px; font-weight:700;">Все счета</div><button class="more" style="background:none;border:none;" onclick="openModal(\'accounts\')">Управлять ></button>';
+  container.appendChild(head);
+
+  let totalByCurrency = {};
+  accounts.forEach(function (a) {
+    if (a.balance == null) return;
+    const cur = a.currency || 'UAH';
+    totalByCurrency[cur] = (totalByCurrency[cur] || 0) + Number(a.balance);
+  });
+
+  accounts.forEach(function (a) {
+    const row = document.createElement('div');
+    row.className = 'budget-row';
+    const sub = [];
+    if (a.bank) sub.push(a.bank);
+    sub.push(a.isCredit ? '💳 кредитный' : '✅ свой');
+    row.innerHTML =
+      '<div class="budget-top">' +
+      '<div class="cat-icon">' + (a.icon || '📦') + '</div>' +
+      '<div class="cat-name">' + a.name + '<div class="lr-sub">' + sub.join(' · ') + '</div></div>' +
+      '<div class="budget-val' + (a.balance != null ? ' set' : '') + '">' + (a.balance != null ? fmt(a.balance) + ' ' + currencySymbol(a.currency) : 'не указано') + '</div>' +
+      '</div>';
+    container.appendChild(row);
+  });
+
+  const currencies = Object.keys(totalByCurrency);
+  if (currencies.length) {
+    const totalsEl = document.createElement('div');
+    totalsEl.className = 'card-hint';
+    totalsEl.style.marginTop = '10px';
+    totalsEl.textContent = 'Итого по счетам с указанным балансом: ' +
+      currencies.map(function (c) { return fmt(totalByCurrency[c]) + ' ' + currencySymbol(c); }).join(' + ') +
+      (currencies.length > 1 ? ' (валюты не конвертируются между собой)' : '');
+    container.appendChild(totalsEl);
+  }
+}
+function refreshAllAccountsPreview() {
+  const el = document.getElementById('allAccountsPreview');
+  if (el) renderAllAccountsSection(el);
 }
 
 /* ===== Бюджеты ===== */
@@ -1749,6 +1938,9 @@ function fallbackCopy(text) {
 /* ===== Настройки ===== */
 function renderSettingsModal(body) {
   body.innerHTML =
+    '<div class="settings-group-label">' + t('settingsLanguage') + '</div>' +
+    '<div class="chip-group" id="langChips" style="flex-wrap:wrap;"></div>' +
+
     '<div class="settings-group-label">Тема</div>' +
     '<div class="seg-toggle">' +
     '<button class="seg-btn" id="themeSystemBtn">Системная</button>' +
@@ -1778,6 +1970,15 @@ function renderSettingsModal(body) {
     '<button class="list-row" onclick="tg.showAlert(\'Пользовательское соглашение доступно по запросу у команды приложения.\')"><div class="lr-name">Пользовательское соглашение</div><div class="lr-chev">›</div></button>' +
     '<button class="list-row" onclick="tg.showAlert(\'Политика конфиденциальности доступна по запросу у команды приложения.\')"><div class="lr-name">Политика конфиденциальности</div><div class="lr-chev">›</div></button>' +
     '<div class="list-row"><div class="lr-name">Версия</div><div class="lr-val">1.0.0</div></div>';
+
+  const langChips = document.getElementById('langChips');
+  Object.keys(LANG_NAMES).forEach(function (code) {
+    const chip = document.createElement('div');
+    chip.className = 'chip-btn' + (code === walletLang ? ' selected' : '');
+    chip.textContent = LANG_NAMES[code];
+    chip.onclick = function () { setWalletLang(code); };
+    langChips.appendChild(chip);
+  });
 
   document.getElementById('themeSystemBtn').classList.toggle('active', walletTheme === 'system');
   document.getElementById('themeLightBtn').classList.toggle('active', walletTheme === 'light');
@@ -1974,6 +2175,7 @@ function handleReceiptFile(e) {
 let receiptItems = [];
 let receiptNeedsReview = false;
 let receiptDetectedTotal = null;
+let receiptDetectedCurrency = null;
 async function processReceiptImage(base64, mediaType) {
   promptMode = 'receipt';
   document.getElementById('promptTitle').textContent = 'Скан чека';
@@ -1995,6 +2197,7 @@ async function processReceiptImage(base64, mediaType) {
     receiptItems = items.map(function (it) { return { category: it.category || 'Прочее', amount: Number(it.amount) || 0, comment: it.comment || '' }; });
     receiptNeedsReview = !!result.needsReview;
     receiptDetectedTotal = result.total;
+    receiptDetectedCurrency = result.currency || null;
     renderReceiptReview();
   } catch (e) {
     console.error(e);
@@ -2005,12 +2208,19 @@ function renderReceiptReview() {
   const catNames = expenseCategories.map(function (c) { return c.name; });
   const body = document.getElementById('promptBody');
   body.innerHTML = '';
+  if (receiptDetectedCurrency && receiptDetectedCurrency !== 'UAH') {
+    const cwarn = document.createElement('div');
+    cwarn.className = 'card-hint';
+    cwarn.style.cssText = 'background:rgba(96,165,250,0.14); color:#93c5fd; padding:10px 12px; border-radius:12px; margin-bottom:12px;';
+    cwarn.textContent = '💱 Похоже, чек в валюте ' + receiptDetectedCurrency + ', а не ₴. Суммы ниже — как на чеке, без конвертации. При необходимости пересчитайте вручную.';
+    body.appendChild(cwarn);
+  }
   if (receiptNeedsReview) {
     const warn = document.createElement('div');
     warn.className = 'card-hint';
     warn.style.cssText = 'background:rgba(255,107,129,0.14); color:#ffb3c0; padding:10px 12px; border-radius:12px; margin-bottom:12px;';
     warn.textContent = '⚠️ Сумма позиций не совпадает с итогом чека' +
-      (receiptDetectedTotal != null ? ' (на чеке: ' + fmt(receiptDetectedTotal) + ' ₴)' : '') +
+      (receiptDetectedTotal != null ? ' (на чеке: ' + fmt(receiptDetectedTotal) + ' ' + (receiptDetectedCurrency || '₴') + ')' : '') +
       ' — внимательно проверьте цифры перед сохранением.';
     body.appendChild(warn);
   }
