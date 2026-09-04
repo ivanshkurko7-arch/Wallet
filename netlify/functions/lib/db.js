@@ -94,9 +94,13 @@ async function linkFamilies(userId, inviteCode) {
   return { ok: true, message: 'Готово! Теперь у вас общий бюджет.' };
 }
 
-async function addTransaction(userId, amount, type, category, comment, account) {
+// createdAt — необязательный unix-таймстамп (секунды). Если не передан — берём текущее время.
+async function addTransaction(userId, amount, type, category, comment, account, createdAt) {
   const familyId = await getFamilyId(userId);
   if (!familyId) throw new Error('Пользователь не найден, отправьте /start в бота');
+  const ts = (createdAt != null && Number.isFinite(Number(createdAt)) && Number(createdAt) > 0)
+    ? Math.floor(Number(createdAt))
+    : Math.floor(Date.now() / 1000);
   const { data, error } = await supabase.from('transactions').insert({
     family_id: familyId,
     user_id: userId,
@@ -105,8 +109,39 @@ async function addTransaction(userId, amount, type, category, comment, account) 
     category,
     comment: comment || '',
     account: account || 'Наличные',
-    created_at: Math.floor(Date.now() / 1000),
+    created_at: ts,
   }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Редактирование существующей операции. fields — объект с любым подмножеством полей
+// { amount, type, category, comment, account, created_at }. Меняются только переданные поля.
+async function updateTransaction(userId, transactionId, fields) {
+  const familyId = await getFamilyId(userId);
+  if (!familyId) throw new Error('Пользователь не найден, отправьте /start в бота');
+
+  const { data: tx, error: selectError } = await supabase
+    .from('transactions').select('*').eq('id', transactionId).maybeSingle();
+  if (selectError) throw selectError;
+  // Сравниваем как строки: bigint из Postgres может прийти и числом, и строкой
+  // в зависимости от версии драйвера — строгое === могло бы ошибочно отклонить редактирование.
+  if (!tx || String(tx.family_id) !== String(familyId)) {
+    throw new Error('Операция не найдена');
+  }
+
+  const updates = {};
+  if (fields.amount !== undefined && fields.amount !== null) updates.amount = Number(fields.amount);
+  if (fields.type !== undefined && fields.type) updates.type = fields.type;
+  if (fields.category !== undefined && fields.category) updates.category = fields.category;
+  if (fields.comment !== undefined) updates.comment = fields.comment || '';
+  if (fields.account !== undefined && fields.account) updates.account = fields.account;
+  if (fields.created_at !== undefined && fields.created_at != null && Number.isFinite(Number(fields.created_at))) {
+    updates.created_at = Math.floor(Number(fields.created_at));
+  }
+
+  const { data, error } = await supabase
+    .from('transactions').update(updates).eq('id', transactionId).select().single();
   if (error) throw error;
   return data;
 }
@@ -139,13 +174,16 @@ async function getFamilyMembers(familyId) {
   return data || [];
 }
 
-async function getTransactions(familyId, limit = 200) {
-  const { data, error } = await supabase
+// start/end — необязательные unix-таймстампы (секунды) для фильтрации по периоду.
+async function getTransactions(familyId, limit = 200, start, end) {
+  let query = supabase
     .from('transactions')
     .select('*, users!inner(first_name, username)')
-    .eq('family_id', familyId)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    .eq('family_id', familyId);
+  if (start != null && Number.isFinite(Number(start))) query = query.gte('created_at', Math.floor(Number(start)));
+  if (end != null && Number.isFinite(Number(end))) query = query.lte('created_at', Math.floor(Number(end)));
+
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
   return (data || []).map((t) => ({
     ...t,
@@ -198,6 +236,7 @@ module.exports = {
   getFamilyId,
   linkFamilies,
   addTransaction,
+  updateTransaction,
   deleteTransaction,
   getFamilyMembers,
   getTransactions,
