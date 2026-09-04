@@ -448,7 +448,7 @@
   <button class="nav-item" onclick="openModal('tx')"><div class="ic">📋</div><span data-i18n="navTxLabel">Операции</span></button>
   <button class="nav-fab" onclick="openSheet('expense')">+</button>
   <button class="nav-item" onclick="openModal('analytics')"><div class="ic">📊</div><span data-i18n="navAnalyticsLabel">Аналитика</span></button>
-  <button class="nav-item" onclick="openModal('family')"><div class="ic">👥</div><span data-i18n="navFamilyLabel">Семья</span></button>
+  <button class="nav-item" onclick="openModal('family')"><div class="ic">👥</div><span data-i18n="navFamilyLabel">Участники</span></button>
 </div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeOnModalOverlay(event)">
@@ -664,12 +664,12 @@ const TRANSLATIONS = {
     whereMoneyKept: 'Где хранятся деньги', accountsAndWallets: 'Ваши счета и кошельки',
     recentTransactions: 'Последние операции', incomeExpenseHistory: 'История трат и доходов',
     more: 'Подробнее >', all: 'Все >', partnerInviteCode: 'Код приглашения партнёра',
-    navHomeLabel: 'Главная', navTxLabel: 'Операции', navAnalyticsLabel: 'Аналитика', navFamilyLabel: 'Семья',
+    navHomeLabel: 'Главная', navTxLabel: 'Операции', navAnalyticsLabel: 'Аналитика', navFamilyLabel: 'Участники',
     menuCategories: 'Категории', menuScanReceipt: 'Скан чека', menuAccounts: 'Счета',
     menuTransfer: 'Перевод между счетами', menuBudgets: 'Бюджеты', menuShortcut: 'Быстрый ввод',
     menuSettings: 'Настройки', menuHowToUse: 'Как пользоваться', menuInvitePartner: 'Пригласить партнёра',
     menuEnterCode: 'Ввести код партнёра', menuTitle: 'Меню',
-    modalTx: 'Все операции', modalAnalytics: 'Аналитика расходов', modalFamily: 'Семья',
+    modalTx: 'Все операции', modalAnalytics: 'Аналитика расходов', modalFamily: 'Участники',
     modalStorage: 'Где хранятся деньги', modalCategories: 'Категории', modalAccounts: 'Счета',
     modalBudgets: 'Бюджеты', modalShortcut: 'Шорткат', modalSettings: 'Настройки',
     settingsLanguage: 'Язык интерфейса'
@@ -683,12 +683,12 @@ const TRANSLATIONS = {
     whereMoneyKept: 'Де зберігаються гроші', accountsAndWallets: 'Ваші рахунки та гаманці',
     recentTransactions: 'Останні операції', incomeExpenseHistory: 'Історія витрат і доходів',
     more: 'Детальніше >', all: 'Усі >', partnerInviteCode: 'Код запрошення партнера',
-    navHomeLabel: 'Головна', navTxLabel: 'Операції', navAnalyticsLabel: 'Аналітика', navFamilyLabel: 'Родина',
+    navHomeLabel: 'Головна', navTxLabel: 'Операції', navAnalyticsLabel: 'Аналітика', navFamilyLabel: 'Учасники',
     menuCategories: 'Категорії', menuScanReceipt: 'Скан чека', menuAccounts: 'Рахунки',
     menuTransfer: 'Переказ між рахунками', menuBudgets: 'Бюджети', menuShortcut: 'Швидке введення',
     menuSettings: 'Налаштування', menuHowToUse: 'Як користуватися', menuInvitePartner: 'Запросити партнера',
     menuEnterCode: 'Ввести код партнера', menuTitle: 'Меню',
-    modalTx: 'Всі операції', modalAnalytics: 'Аналітика витрат', modalFamily: 'Родина',
+    modalTx: 'Всі операції', modalAnalytics: 'Аналітика витрат', modalFamily: 'Учасники',
     modalStorage: 'Де зберігаються гроші', modalCategories: 'Категорії', modalAccounts: 'Рахунки',
     modalBudgets: 'Бюджети', modalShortcut: 'Шорткат', modalSettings: 'Налаштування',
     settingsLanguage: 'Мова інтерфейсу'
@@ -702,12 +702,12 @@ const TRANSLATIONS = {
     whereMoneyKept: 'Where money is kept', accountsAndWallets: 'Your accounts and wallets',
     recentTransactions: 'Recent transactions', incomeExpenseHistory: 'Income and expense history',
     more: 'More >', all: 'All >', partnerInviteCode: 'Partner invite code',
-    navHomeLabel: 'Home', navTxLabel: 'Transactions', navAnalyticsLabel: 'Analytics', navFamilyLabel: 'Family',
+    navHomeLabel: 'Home', navTxLabel: 'Transactions', navAnalyticsLabel: 'Analytics', navFamilyLabel: 'Members',
     menuCategories: 'Categories', menuScanReceipt: 'Scan receipt', menuAccounts: 'Accounts',
     menuTransfer: 'Transfer between accounts', menuBudgets: 'Budgets', menuShortcut: 'Quick input',
     menuSettings: 'Settings', menuHowToUse: 'How to use', menuInvitePartner: 'Invite partner',
     menuEnterCode: 'Enter partner code', menuTitle: 'Menu',
-    modalTx: 'All transactions', modalAnalytics: 'Spending analytics', modalFamily: 'Family',
+    modalTx: 'All transactions', modalAnalytics: 'Spending analytics', modalFamily: 'Members',
     modalStorage: 'Where money is kept', modalCategories: 'Categories', modalAccounts: 'Accounts',
     modalBudgets: 'Budgets', modalShortcut: 'Shortcut', modalSettings: 'Settings',
     settingsLanguage: 'Interface language'
@@ -721,12 +721,12 @@ const TRANSLATIONS = {
     whereMoneyKept: 'Wo das Geld liegt', accountsAndWallets: 'Deine Konten und Wallets',
     recentTransactions: 'Letzte Buchungen', incomeExpenseHistory: 'Verlauf von Ausgaben und Einnahmen',
     more: 'Mehr >', all: 'Alle >', partnerInviteCode: 'Einladungscode für Partner',
-    navHomeLabel: 'Start', navTxLabel: 'Buchungen', navAnalyticsLabel: 'Analyse', navFamilyLabel: 'Familie',
+    navHomeLabel: 'Start', navTxLabel: 'Buchungen', navAnalyticsLabel: 'Analyse', navFamilyLabel: 'Mitglieder',
     menuCategories: 'Kategorien', menuScanReceipt: 'Beleg scannen', menuAccounts: 'Konten',
     menuTransfer: 'Übertrag zwischen Konten', menuBudgets: 'Budgets', menuShortcut: 'Schnelleingabe',
     menuSettings: 'Einstellungen', menuHowToUse: 'Anleitung', menuInvitePartner: 'Partner einladen',
     menuEnterCode: 'Partnercode eingeben', menuTitle: 'Menü',
-    modalTx: 'Alle Buchungen', modalAnalytics: 'Ausgabenanalyse', modalFamily: 'Familie',
+    modalTx: 'Alle Buchungen', modalAnalytics: 'Ausgabenanalyse', modalFamily: 'Mitglieder',
     modalStorage: 'Wo das Geld liegt', modalCategories: 'Kategorien', modalAccounts: 'Konten',
     modalBudgets: 'Budgets', modalShortcut: 'Shortcut', modalSettings: 'Einstellungen',
     settingsLanguage: 'Sprache der Oberfläche'
@@ -2033,7 +2033,7 @@ function openTimezonePrompt() {
 
 /* ===== Онбординг ===== */
 const ONBOARD_STEPS = [
-  { emoji: '👋', title: 'Добро пожаловать в Wallet', desc: 'Быстро смотри баланс, добавляй операции и следи за расходами всей семьи в одном месте.' },
+  { emoji: '👋', title: 'Добро пожаловать в Wallet', desc: 'Быстро смотри баланс, добавляй операции и следи за своими расходами — а если захочешь, объединяй бюджет с близкими.' },
   { emoji: '💜', title: 'Баланс и период', desc: 'Наверху выбирай месяц или «Всё время», а карточка ниже показывает общий баланс за выбранный период.' },
   { emoji: '➕', title: 'Добавляй операции', desc: 'Кнопка «Добавить» или большая круглая кнопка снизу открывают форму — выбери тип, категорию, место хранения и сумму.' },
   { emoji: '📊', title: 'Категории и бюджеты', desc: 'В меню (значок ☰ вверху слева) можно настраивать категории, ставить месячные лимиты в «Бюджетах» и включать быстрый ввод без открытия чата.' },
