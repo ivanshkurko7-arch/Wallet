@@ -15,16 +15,20 @@ function mainKeyboard() {
 
 bot.start(async (ctx) => {
   const user = ctx.from;
+  // Убираем старую постоянную клавиатуру снизу — она осталась с прошлой версии бота
+  // и без явного удаления не пропадёт сама по себе.
+  try { await ctx.reply('Убрал старую кнопку внизу — теперь открывай через кнопку в сообщении или меню бота. ⬇️', Markup.removeKeyboard()); } catch (e) { /* не критично */ }
   await db.getOrCreateUser(user.id, user.username, user.first_name);
   const code = await db.getInviteCode(user.id);
   const text =
     `💜 Добро пожаловать в <b>Wallet</b>, ${user.first_name}!\n\n` +
-    'Я помогу вести семейный бюджет без лишней возни: записывай траты и доходы прямо в чате, ' +
+    'Я помогу вести личный учёт финансов без лишней возни: записывай траты и доходы прямо в чате, ' +
     'сканируй чеки, диктуй голосом — сам всё разберу и разложу по категориям.\n\n' +
+    'А если захочешь — можно объединить бюджет с близким человеком (партнёром, другом, семьёй) ' +
+    'и вести общий учёт вместе:\n' +
     `🔑 Твой код приглашения: <b>${code}</b>\n` +
-    'Отправь его партнёру — пусть введёт в боте команду:\n' +
-    `<code>/link ${code}</code>\n` +
-    'чтобы бюджет стал общим.\n\n' +
+    'Отправь его тому, с кем хочешь объединиться — пусть введёт в боте команду:\n' +
+    `<code>/link ${code}</code>\n\n` +
     '<b>Как пользоваться:</b>\n' +
     '• Просто напиши: <code>купил хлеб 50</code>\n' +
     '• Пришли фото чека — разложу по категориям сам\n' +
@@ -99,7 +103,7 @@ bot.command('users', async (ctx) => {
     users.forEach(function (u, i) {
       const name = u.first_name || 'Без имени';
       const uname = u.username ? '@' + u.username : '—';
-      text += `${i + 1}. ${name} (${uname}) — id <code>${u.user_id}</code> · семья #${u.family_id}\n`;
+      text += `${i + 1}. ${name} (${uname}) — id <code>${u.user_id}</code> · группа #${u.family_id}\n`;
     });
 
     // Telegram режет сообщения длиннее ~4096 символов — на всякий случай режем на части
@@ -202,9 +206,14 @@ bot.on('photo', async (ctx) => {
       await ctx.reply('Не получилось распознать чек. Попробуй сфотографировать более чётко и целиком.');
       return;
     }
-    let replyText = result.needsReview
-      ? '⚠️ Сумма позиций не совпадает с итогом чека' + (result.total != null ? ` (на чеке: ${Math.round(result.total)} ₴)` : '') + ' — проверь записи ниже и поправь при необходимости.\n\n🧾 Записал по чеку:\n'
-      : '🧾 Записал по чеку:\n';
+    let replyText = '';
+    if (result.currency && result.currency !== 'UAH') {
+      replyText += `💱 Похоже, чек в валюте ${result.currency}, а не ₴. Суммы записаны как есть, без конвертации — при необходимости поправь вручную в приложении.\n\n`;
+    }
+    if (result.needsReview) {
+      replyText += '⚠️ Сумма позиций не совпадает с итогом чека' + (result.total != null ? ` (на чеке: ${Math.round(result.total)} ${result.currency || '₴'})` : '') + ' — проверь записи ниже и поправь при необходимости.\n\n';
+    }
+    replyText += '🧾 Записал по чеку:\n';
     for (const item of items) {
       const amount = Number(item.amount);
       if (!amount) continue;
