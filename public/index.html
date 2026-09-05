@@ -1906,6 +1906,14 @@ function closeOnPromptOverlay(e) { if (e.target.id === 'promptOverlay') closePro
 /* ===== Шорткат ===== */
 function renderShortcutModal(body) {
   const masked = shortcutKey.slice(0, 8) + '-••••-••••-••••-' + shortcutKey.slice(-4);
+  // Регистрируем ключ на сервере, чтобы /api/quick-add мог найти пользователя по нему.
+  // Безопасно вызывать при каждом открытии экрана — просто перезаписывает то же значение.
+  api('/api/shortcut-key', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ init_data: initData, key: shortcutKey })
+  }).catch(function (e) { console.error('Не удалось зарегистрировать ключ шортката:', e); });
+
+  const apiUrl = location.origin + '/api/quick-add';
   body.innerHTML =
     '<div class="shortcut-hero"><div class="ic">⚡</div><div>' +
     '<h3>Быстрый ввод</h3><p>Учёт трат и доходов в одно касание, не открывая чат.</p>' +
@@ -1913,10 +1921,19 @@ function renderShortcutModal(body) {
     '<div class="settings-group-label">Ключ доступа</div>' +
     '<div class="key-box"><code>' + masked + '</code><button class="key-copy-btn" onclick="copyShortcutKey()">Копировать</button></div>' +
     '<div class="card-hint" style="margin-bottom:16px;">Никому не передавай этот ключ — он даёт доступ к записи операций от твоего имени.</div>' +
-    '<div class="settings-group-label">Как настроить</div>' +
+    '<div class="settings-group-label">Как настроить (iOS «Команды»)</div>' +
     '<div class="step-row"><div class="step-num">1</div><div class="step-text">Скопируй ключ выше</div></div>' +
-    '<div class="step-row"><div class="step-num">2</div><div class="step-text">Создай в приложении «Команды» (Shortcuts) свою автоматизацию с этим ключом</div></div>' +
-    '<div class="step-row"><div class="step-num">3</div><div class="step-text">Запускай её любым удобным способом — см. ниже</div></div>' +
+    '<div class="step-row"><div class="step-num">2</div><div class="step-text">Открой приложение «Команды» → создай новую команду</div></div>' +
+    '<div class="step-row"><div class="step-num">3</div><div class="step-text">Добавь шаг «Запросить текст» (Ask for Input) — сюда будешь диктовать/печатать операцию</div></div>' +
+    '<div class="step-row"><div class="step-num">4</div><div class="step-text">Добавь шаг «Получить содержимое URL» (Get Contents of URL), настрой его как показано ниже</div></div>' +
+    '<div class="card-hint" style="background:rgba(37,99,235,0.12); padding:12px; border-radius:12px; margin:10px 0;">' +
+    '<b>URL:</b> <code style="word-break:break-all;">' + apiUrl + '</code><br><br>' +
+    '<b>Метод:</b> POST<br><br>' +
+    '<b>Тип запроса:</b> JSON<br><br>' +
+    '<b>Текст запроса (Request Body):</b><br>' +
+    '<code style="display:block; margin-top:4px; white-space:pre-wrap;">{\n  "key": "' + shortcutKey + '",\n  "text": [сюда вставь переменную "Запрошенный текст" из шага 3]\n}</code>' +
+    '</div>' +
+    '<div class="step-row"><div class="step-num">5</div><div class="step-text">Сохрани — теперь просто скажи Siri название команды и продиктуй трату, например «продукты 500»</div></div>' +
     '<div class="settings-group-label">Быстрый вызов</div>' +
     '<div class="invoke-row"><div class="ic">📱</div><div class="txt"><strong>Касание крышки</strong><span>Настройки → Универсальный доступ → Касание → Касание задней панели</span></div></div>' +
     '<div class="invoke-row"><div class="ic">⏻</div><div class="txt"><strong>Кнопка «Действие»</strong><span>Настройки → Кнопка «Действие» → Быстрая команда</span></div></div>' +
