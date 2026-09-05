@@ -28,6 +28,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/shortcut-key"
+  to = "/.netlify/functions/shortcut-key"
+  status = 200
+
+[[redirects]]
+  from = "/api/quick-add"
+  to = "/.netlify/functions/quick-add"
+  status = 200
+
+[[redirects]]
   from = "/webhook"
   to = "/.netlify/functions/webhook"
   status = 200
