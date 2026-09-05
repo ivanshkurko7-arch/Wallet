@@ -174,6 +174,21 @@ async function getFamilyMembers(familyId) {
   return data || [];
 }
 
+// Сохраняет/обновляет ключ быстрого ввода (шорткат) для пользователя.
+async function setShortcutKey(userId, key) {
+  const { error } = await supabase.from('users').update({ shortcut_key: key }).eq('user_id', userId);
+  if (error) throw error;
+  return true;
+}
+
+// Находит пользователя по ключу быстрого ввода — так авторизуются запросы от iOS-шортката,
+// у которого нет доступа к Telegram init_data.
+async function getUserByShortcutKey(key) {
+  if (!key) return null;
+  const { data } = await supabase.from('users').select('*').eq('shortcut_key', key).maybeSingle();
+  return data || null;
+}
+
 // start/end — необязательные unix-таймстампы (секунды) для фильтрации по периоду.
 async function getTransactions(familyId, limit = 200, start, end) {
   let query = supabase
@@ -240,6 +255,8 @@ module.exports = {
   updateTransaction,
   deleteTransaction,
   getFamilyMembers,
+  setShortcutKey,
+  getUserByShortcutKey,
   getTransactions,
   getSummary,
 };
