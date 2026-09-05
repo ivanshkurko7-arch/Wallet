@@ -25,12 +25,12 @@ async function getAllUserIds() {
 async function sendReminder(userId) {
   const text =
     '🌙 Вечер — самое время записать сегодняшние траты!\n\n' +
-    'Не дай мелким покупкам потеряться. Открой Wallet и добавь операции за день — это займёт меньше минуты.';
+    'Не дай мелким покупкам потеряться. Открой Mivaro и добавь операции за день — это займёт меньше минуты.';
   const body = {
     chat_id: userId,
     text: text,
     reply_markup: {
-      inline_keyboard: [[{ text: '💰 Открыть Wallet', web_app: { url: WEBAPP_URL } }]],
+      inline_keyboard: [[{ text: '💰 Открыть Mivaro', web_app: { url: WEBAPP_URL } }]],
     },
   };
   const res = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
