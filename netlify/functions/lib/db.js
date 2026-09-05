@@ -192,8 +192,9 @@ async function getTransactions(familyId, limit = 200, start, end) {
   }));
 }
 
-async function getSummary(familyId) {
-  const transactions = await getTransactions(familyId, 100000);
+// start/end — необязательные unix-таймстампы (секунды) для фильтрации по периоду.
+async function getSummary(familyId, start, end) {
+  const transactions = await getTransactions(familyId, 100000, start, end);
   const byUser = {};
   const byCategory = {};
   const byAccount = {};
