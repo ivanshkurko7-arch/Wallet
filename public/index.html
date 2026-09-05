@@ -3,16 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Wallet</title>
+<title>Mivaro</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0a1410;
+    --bg: #05070d;
     --text: #ffffff;
-    --hint: #8fa89c;
+    --hint: #8a94ad;
     --card: rgba(255,255,255,0.05);
-    --purple: #10b981;
-    --pink: #34d399;
+    --purple: #2563eb;
+    --pink: #93c5fd;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
   body {
@@ -26,7 +27,8 @@
     width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.06);
     display:flex; align-items:center; justify-content:center; font-size: 16px; border: 1px solid rgba(255,255,255,0.08); color: white;
   }
-  .topbar .title { font-size: 17px; font-weight: 800; }
+  .topbar .title { font-size: 17px; font-weight: 800; display:flex; align-items:center; gap: 8px; }
+  .brand-logo { width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; }
 
   .period-row { display:flex; align-items:center; gap: 8px; margin-bottom: 12px; }
   .period-nav { display:flex; align-items:center; gap: 4px; background: var(--card); border-radius: 12px; padding: 4px; flex: 1; }
@@ -39,11 +41,11 @@
   .period-all-btn.active { background: var(--purple); color: white; border-color: var(--purple); }
 
   .balance-card {
-    background: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.12) 0%, transparent 45%),
-                linear-gradient(150deg, #6a5ce8 0%, #5245c4 45%, #2f2570 100%);
+    background: radial-gradient(circle at 100% 0%, rgba(147,197,253,0.18) 0%, transparent 45%),
+                linear-gradient(150deg, #1e3a8a 0%, #1d2a5e 45%, #05070d 100%);
     background-size: cover; background-position: center;
     border-radius: 22px; padding: 20px; margin-bottom: 12px; position: relative; overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.08); min-height: 150px;
+    border: 1px solid rgba(147,197,253,0.15); min-height: 150px;
   }
   .balance-card .house { position: absolute; right: 14px; top: 18px; width: 108px; height: 108px; }
   .balance-label { font-size: 12px; color: rgba(255,255,255,0.75); display:flex; align-items:center; gap:5px; }
@@ -348,7 +350,7 @@
 
 <div class="topbar">
   <button class="icon-btn" onclick="openMenu()">☰</button>
-  <div class="title">Wallet</div>
+  <div class="title"><img src="/logo-header.png" alt="Mivaro" class="brand-logo"> Mivaro</div>
   <button class="icon-btn" onclick="loadData()">↻</button>
 </div>
 
@@ -365,7 +367,7 @@
   <svg class="house" id="houseIcon" viewBox="0 0 100 100" fill="none">
     <path d="M50 15 L88 45 L82 45 L82 85 L18 85 L18 45 L12 45 Z" fill="#ffffff" opacity="0.16"/>
     <path d="M50 15 L88 45 L82 45 L82 85 L18 85 L18 45 L12 45 Z" fill="#ffffff" opacity="0.10" transform="translate(3,3)"/>
-    <circle cx="50" cy="55" r="10" fill="#34d399" opacity="0.85"/>
+    <circle cx="50" cy="55" r="10" fill="#93c5fd" opacity="0.85"/>
     <circle cx="72" cy="78" r="13" fill="#fcd34d" opacity="0.9"/>
     <circle cx="82" cy="82" r="13" fill="#fbbf24" opacity="0.85"/>
     <circle cx="77" cy="72" r="13" fill="#f59e0b" opacity="0.8"/>
@@ -914,7 +916,7 @@ function renderBarChart(container, buckets, maxHeightPx) {
   html += '</div>';
   container.innerHTML = html;
 }
-const COLORS = ['#10b981', '#3ea6ff', '#ffb84d', '#34d399', '#a3e635', '#ff6b6b', '#4dd0e1', '#c084fc'];
+const COLORS = ['#2563eb', '#93c5fd', '#ffb84d', '#34d399', '#a3e635', '#ff6b6b', '#4dd0e1', '#c084fc'];
 
 async function api(path, opts) {
   opts = opts || {};
@@ -2033,7 +2035,7 @@ function openTimezonePrompt() {
 
 /* ===== Онбординг ===== */
 const ONBOARD_STEPS = [
-  { emoji: '👋', title: 'Добро пожаловать в Wallet', desc: 'Быстро смотри баланс, добавляй операции и следи за своими расходами — а если захочешь, объединяй бюджет с близкими.' },
+  { emoji: '👋', title: 'Добро пожаловать в Mivaro', desc: 'Быстро смотри баланс, добавляй операции и следи за своими расходами — а если захочешь, объединяй бюджет с близкими.' },
   { emoji: '💜', title: 'Баланс и период', desc: 'Наверху выбирай месяц или «Всё время», а карточка ниже показывает общий баланс за выбранный период.' },
   { emoji: '➕', title: 'Добавляй операции', desc: 'Кнопка «Добавить» или большая круглая кнопка снизу открывают форму — выбери тип, категорию, место хранения и сумму.' },
   { emoji: '📊', title: 'Категории и бюджеты', desc: 'В меню (значок ☰ вверху слева) можно настраивать категории, ставить месячные лимиты в «Бюджетах» и включать быстрый ввод без открытия чата.' },
