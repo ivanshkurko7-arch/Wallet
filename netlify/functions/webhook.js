@@ -9,7 +9,7 @@ const WEBAPP_URL = process.env.WEBAPP_URL;
 
 function mainKeyboard() {
   return Markup.inlineKeyboard([
-    Markup.button.webApp('💰 Открыть Wallet', WEBAPP_URL),
+    Markup.button.webApp('💰 Открыть Mivaro', WEBAPP_URL),
   ]);
 }
 
@@ -18,10 +18,11 @@ bot.start(async (ctx) => {
   // Убираем старую постоянную клавиатуру снизу — она осталась с прошлой версии бота
   // и без явного удаления не пропадёт сама по себе.
   try { await ctx.reply('Убрал старую кнопку внизу — теперь открывай через кнопку в сообщении или меню бота. ⬇️', Markup.removeKeyboard()); } catch (e) { /* не критично */ }
+  try { await ctx.replyWithPhoto({ url: WEBAPP_URL + '/logo.png' }); } catch (e) { console.error('Не удалось отправить логотип:', e.message); }
   await db.getOrCreateUser(user.id, user.username, user.first_name);
   const code = await db.getInviteCode(user.id);
   const text =
-    `💜 Добро пожаловать в <b>Wallet</b>, ${user.first_name}!\n\n` +
+    `💙 Добро пожаловать в <b>Mivaro</b>, ${user.first_name}!\n\n` +
     'Я помогу вести личный учёт финансов без лишней возни: записывай траты и доходы прямо в чате, ' +
     'сканируй чеки, диктуй голосом — сам всё разберу и разложу по категориям.\n\n' +
     'А если захочешь — можно объединить бюджет с близким человеком (партнёром, другом, семьёй) ' +
