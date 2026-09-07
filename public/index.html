@@ -260,23 +260,6 @@
   .icon-input-row { display:flex; gap: 10px; }
   .icon-input-row input#promptIcon { width: 62px; text-align:center; font-size: 20px; flex-shrink:0; }
 
-  /* ===== Шорткат ===== */
-  .shortcut-hero { display:flex; gap: 12px; align-items:flex-start; background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
-  .shortcut-hero .ic { width: 44px; height: 44px; border-radius: 13px; background: rgba(124,92,255,0.18); display:flex; align-items:center; justify-content:center; font-size: 20px; flex-shrink:0; }
-  .shortcut-hero h3 { font-size: 15px; margin-bottom: 3px; }
-  .shortcut-hero p { font-size: 12px; color: var(--hint); line-height: 1.4; }
-  .key-box { background: var(--card); border-radius: 14px; padding: 13px 14px; display:flex; align-items:center; gap: 10px; margin-bottom: 6px; }
-  .key-box code { flex:1; font-size: 12.5px; color: white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .key-copy-btn { background:none; border:none; color: var(--purple); font-weight: 700; font-size: 12.5px; white-space:nowrap; }
-  .step-row { display:flex; align-items:center; gap: 12px; background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
-  .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--purple); color:white; font-size:11.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .step-text { font-size: 13px; flex:1; }
-  .invoke-row { display:flex; align-items:center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .invoke-row:last-child { border-bottom:none; }
-  .invoke-row .ic { font-size: 17px; width: 24px; text-align:center; flex-shrink:0; color: var(--hint); }
-  .invoke-row .txt strong { display:block; font-size: 13px; margin-bottom: 2px; }
-  .invoke-row .txt span { font-size: 11px; color: var(--hint); }
-
   /* ===== Онбординг ===== */
   .onboard-dots { display:flex; gap: 5px; }
   .onboard-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.18); }
@@ -305,7 +288,7 @@
   body.theme-light .sheet-close, body.theme-light .modal-close { background: rgba(20,20,45,0.07); color: var(--text); }
   body.theme-light .list-row, body.theme-light .cat-row, body.theme-light .budget-row { border-bottom-color: rgba(0,0,0,0.06); }
   body.theme-light .list-row input[type="time"] { color: var(--text); color-scheme: light; }
-  body.theme-light .cat-icon, body.theme-light .storage-icon, body.theme-light .step-row, body.theme-light .shortcut-hero, body.theme-light .key-box, body.theme-light .onboard-illustration, body.theme-light .receipt-item {
+  body.theme-light .cat-icon, body.theme-light .storage-icon, body.theme-light .onboard-illustration, body.theme-light .receipt-item {
     background: rgba(20,20,45,0.05);
   }
   body.theme-light .receipt-item select, body.theme-light .receipt-item input { background: rgba(20,20,45,0.06); color: var(--text); }
@@ -525,7 +508,7 @@
       <button class="menu-item" onclick="closeMenu(); openModal('accounts')"><span class="ic">🏦</span><span class="lb" data-i18n="menuAccounts">Счета</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openTransferSheet()"><span class="ic">🔁</span><span class="lb" data-i18n="menuTransfer">Перевод между счетами</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openModal('budgets')"><span class="ic">📊</span><span class="lb" data-i18n="menuBudgets">Бюджеты</span><span class="chev">›</span></button>
-      <button class="menu-item" onclick="closeMenu(); openModal('shortcut')"><span class="ic">⚡</span><span class="lb" data-i18n="menuShortcut">Быстрый ввод</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); addToHomeScreenFn()"><span class="ic">📲</span><span class="lb" data-i18n="menuAddHome">Добавить на главный экран</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openModal('settings')"><span class="ic">⚙️</span><span class="lb" data-i18n="menuSettings">Настройки</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); startOnboarding()"><span class="ic">💡</span><span class="lb" data-i18n="menuHowToUse">Как пользоваться</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); showInvite()"><span class="ic">🔗</span><span class="lb" data-i18n="menuInvitePartner">Пригласить партнёра</span><span class="chev">›</span></button>
@@ -668,12 +651,12 @@ const TRANSLATIONS = {
     more: 'Подробнее >', all: 'Все >', partnerInviteCode: 'Код приглашения партнёра',
     navHomeLabel: 'Главная', navTxLabel: 'Операции', navAnalyticsLabel: 'Аналитика', navFamilyLabel: 'Участники',
     menuCategories: 'Категории', menuScanReceipt: 'Скан чека', menuAccounts: 'Счета',
-    menuTransfer: 'Перевод между счетами', menuBudgets: 'Бюджеты', menuShortcut: 'Быстрый ввод',
+    menuTransfer: 'Перевод между счетами', menuBudgets: 'Бюджеты', menuAddHome: 'Добавить на главный экран',
     menuSettings: 'Настройки', menuHowToUse: 'Как пользоваться', menuInvitePartner: 'Пригласить партнёра',
     menuEnterCode: 'Ввести код партнёра', menuTitle: 'Меню',
     modalTx: 'Все операции', modalAnalytics: 'Аналитика расходов', modalFamily: 'Участники',
     modalStorage: 'Где хранятся деньги', modalCategories: 'Категории', modalAccounts: 'Счета',
-    modalBudgets: 'Бюджеты', modalShortcut: 'Шорткат', modalSettings: 'Настройки',
+    modalBudgets: 'Бюджеты', modalSettings: 'Настройки',
     settingsLanguage: 'Язык интерфейса'
   },
   uk: {
@@ -687,12 +670,12 @@ const TRANSLATIONS = {
     more: 'Детальніше >', all: 'Усі >', partnerInviteCode: 'Код запрошення партнера',
     navHomeLabel: 'Головна', navTxLabel: 'Операції', navAnalyticsLabel: 'Аналітика', navFamilyLabel: 'Учасники',
     menuCategories: 'Категорії', menuScanReceipt: 'Скан чека', menuAccounts: 'Рахунки',
-    menuTransfer: 'Переказ між рахунками', menuBudgets: 'Бюджети', menuShortcut: 'Швидке введення',
+    menuTransfer: 'Переказ між рахунками', menuBudgets: 'Бюджети', menuAddHome: 'Додати на головний екран',
     menuSettings: 'Налаштування', menuHowToUse: 'Як користуватися', menuInvitePartner: 'Запросити партнера',
     menuEnterCode: 'Ввести код партнера', menuTitle: 'Меню',
     modalTx: 'Всі операції', modalAnalytics: 'Аналітика витрат', modalFamily: 'Учасники',
     modalStorage: 'Де зберігаються гроші', modalCategories: 'Категорії', modalAccounts: 'Рахунки',
-    modalBudgets: 'Бюджети', modalShortcut: 'Шорткат', modalSettings: 'Налаштування',
+    modalBudgets: 'Бюджети', modalSettings: 'Налаштування',
     settingsLanguage: 'Мова інтерфейсу'
   },
   en: {
@@ -706,12 +689,12 @@ const TRANSLATIONS = {
     more: 'More >', all: 'All >', partnerInviteCode: 'Partner invite code',
     navHomeLabel: 'Home', navTxLabel: 'Transactions', navAnalyticsLabel: 'Analytics', navFamilyLabel: 'Members',
     menuCategories: 'Categories', menuScanReceipt: 'Scan receipt', menuAccounts: 'Accounts',
-    menuTransfer: 'Transfer between accounts', menuBudgets: 'Budgets', menuShortcut: 'Quick input',
+    menuTransfer: 'Transfer between accounts', menuBudgets: 'Budgets', menuAddHome: 'Add to home screen',
     menuSettings: 'Settings', menuHowToUse: 'How to use', menuInvitePartner: 'Invite partner',
     menuEnterCode: 'Enter partner code', menuTitle: 'Menu',
     modalTx: 'All transactions', modalAnalytics: 'Spending analytics', modalFamily: 'Members',
     modalStorage: 'Where money is kept', modalCategories: 'Categories', modalAccounts: 'Accounts',
-    modalBudgets: 'Budgets', modalShortcut: 'Shortcut', modalSettings: 'Settings',
+    modalBudgets: 'Budgets', modalSettings: 'Settings',
     settingsLanguage: 'Interface language'
   },
   de: {
@@ -725,12 +708,12 @@ const TRANSLATIONS = {
     more: 'Mehr >', all: 'Alle >', partnerInviteCode: 'Einladungscode für Partner',
     navHomeLabel: 'Start', navTxLabel: 'Buchungen', navAnalyticsLabel: 'Analyse', navFamilyLabel: 'Mitglieder',
     menuCategories: 'Kategorien', menuScanReceipt: 'Beleg scannen', menuAccounts: 'Konten',
-    menuTransfer: 'Übertrag zwischen Konten', menuBudgets: 'Budgets', menuShortcut: 'Schnelleingabe',
+    menuTransfer: 'Übertrag zwischen Konten', menuBudgets: 'Budgets', menuAddHome: 'Zum Startbildschirm hinzufügen',
     menuSettings: 'Einstellungen', menuHowToUse: 'Anleitung', menuInvitePartner: 'Partner einladen',
     menuEnterCode: 'Partnercode eingeben', menuTitle: 'Menü',
     modalTx: 'Alle Buchungen', modalAnalytics: 'Ausgabenanalyse', modalFamily: 'Mitglieder',
     modalStorage: 'Wo das Geld liegt', modalCategories: 'Kategorien', modalAccounts: 'Konten',
-    modalBudgets: 'Budgets', modalShortcut: 'Shortcut', modalSettings: 'Einstellungen',
+    modalBudgets: 'Budgets', modalSettings: 'Einstellungen',
     settingsLanguage: 'Sprache der Oberfläche'
   }
 };
@@ -752,14 +735,6 @@ function setWalletLang(lang) {
 let walletTimezone = localStorage.getItem('walletTimezone') || 'Europe/Kiev|UTC+3';
 let reminderEnabled = localStorage.getItem('walletReminderEnabled') !== '0';
 let reminderTime = localStorage.getItem('walletReminderTime') || '20:00';
-let shortcutKey = localStorage.getItem('walletShortcutKey');
-if (!shortcutKey) {
-  shortcutKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
-    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16);
-    });
-  localStorage.setItem('walletShortcutKey', shortcutKey);
-}
 let promptMode = null;
 let promptEditingIndex = null;
 
@@ -1381,9 +1356,6 @@ function renderModalContent(name) {
     } else if (name === 'budgets') {
       title.textContent = t('modalBudgets');
       renderBudgetsModal(body);
-    } else if (name === 'shortcut') {
-      title.textContent = t('modalShortcut');
-      renderShortcutModal(body);
     } else if (name === 'settings') {
       title.textContent = t('modalSettings');
       renderSettingsModal(body);
@@ -1903,55 +1875,18 @@ function openPrompt() { document.getElementById('promptOverlay').classList.add('
 function closePrompt() { document.getElementById('promptOverlay').classList.remove('open'); promptMode = null; promptEditingIndex = null; }
 function closeOnPromptOverlay(e) { if (e.target.id === 'promptOverlay') closePrompt(); }
 
-/* ===== Шорткат ===== */
-function renderShortcutModal(body) {
-  const masked = shortcutKey.slice(0, 8) + '-••••-••••-••••-' + shortcutKey.slice(-4);
-  // Регистрируем ключ на сервере, чтобы /api/quick-add мог найти пользователя по нему.
-  // Безопасно вызывать при каждом открытии экрана — просто перезаписывает то же значение.
-  api('/api/shortcut-key', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ init_data: initData, key: shortcutKey })
-  }).catch(function (e) { console.error('Не удалось зарегистрировать ключ шортката:', e); });
-
-  const apiUrl = location.origin + '/api/quick-add';
-  body.innerHTML =
-    '<div class="shortcut-hero"><div class="ic">⚡</div><div>' +
-    '<h3>Быстрый ввод</h3><p>Учёт трат и доходов в одно касание, не открывая чат.</p>' +
-    '</div></div>' +
-    '<div class="settings-group-label">Ключ доступа</div>' +
-    '<div class="key-box"><code>' + masked + '</code><button class="key-copy-btn" onclick="copyShortcutKey()">Копировать</button></div>' +
-    '<div class="card-hint" style="margin-bottom:16px;">Никому не передавай этот ключ — он даёт доступ к записи операций от твоего имени.</div>' +
-    '<div class="settings-group-label">Как настроить (iOS «Команды»)</div>' +
-    '<div class="step-row"><div class="step-num">1</div><div class="step-text">Скопируй ключ выше</div></div>' +
-    '<div class="step-row"><div class="step-num">2</div><div class="step-text">Открой приложение «Команды» → создай новую команду</div></div>' +
-    '<div class="step-row"><div class="step-num">3</div><div class="step-text">Добавь шаг «Запросить текст» (Ask for Input) — сюда будешь диктовать/печатать операцию</div></div>' +
-    '<div class="step-row"><div class="step-num">4</div><div class="step-text">Добавь шаг «Получить содержимое URL» (Get Contents of URL), настрой его как показано ниже</div></div>' +
-    '<div class="card-hint" style="background:rgba(37,99,235,0.12); padding:12px; border-radius:12px; margin:10px 0;">' +
-    '<b>URL:</b> <code style="word-break:break-all;">' + apiUrl + '</code><br><br>' +
-    '<b>Метод:</b> POST<br><br>' +
-    '<b>Тип запроса:</b> JSON<br><br>' +
-    '<b>Текст запроса (Request Body):</b><br>' +
-    '<code style="display:block; margin-top:4px; white-space:pre-wrap;">{\n  "key": "' + shortcutKey + '",\n  "text": [сюда вставь переменную "Запрошенный текст" из шага 3]\n}</code>' +
-    '</div>' +
-    '<div class="step-row"><div class="step-num">5</div><div class="step-text">Сохрани — теперь просто скажи Siri название команды и продиктуй трату, например «продукты 500»</div></div>' +
-    '<div class="settings-group-label">Быстрый вызов</div>' +
-    '<div class="invoke-row"><div class="ic">📱</div><div class="txt"><strong>Касание крышки</strong><span>Настройки → Универсальный доступ → Касание → Касание задней панели</span></div></div>' +
-    '<div class="invoke-row"><div class="ic">⏻</div><div class="txt"><strong>Кнопка «Действие»</strong><span>Настройки → Кнопка «Действие» → Быстрая команда</span></div></div>' +
-    '<div class="invoke-row"><div class="ic">🎛️</div><div class="txt"><strong>Пункт управления</strong><span>Шторка сверху → «+» → выбери команду</span></div></div>' +
-    '<div class="card-hint">Доступно на iOS. Поддержка Android появится позже.</div>';
+/* ===== Добавить на главный экран ===== */
+function addToHomeScreenFn() {
+  if (tg && typeof tg.addToHomeScreen === 'function') {
+    tg.addToHomeScreen();
+  } else {
+    tg.showAlert('Обновите Telegram до последней версии, чтобы добавить приложение на главный экран.');
+  }
 }
-function copyShortcutKey() {
-  const done = function () { tg.HapticFeedback.notificationOccurred('success'); tg.showAlert('Ключ скопирован'); };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(shortcutKey).then(done).catch(function () { fallbackCopy(shortcutKey); done(); });
-  } else { fallbackCopy(shortcutKey); done(); }
-}
-function fallbackCopy(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); } catch (e) { console.error(e); }
-  document.body.removeChild(ta);
+if (tg && typeof tg.onEvent === 'function') {
+  try {
+    tg.onEvent('homeScreenAdded', function () { showToast('Добавлено на главный экран!'); });
+  } catch (e) { /* старые версии Telegram могут не поддерживать это событие */ }
 }
 
 /* ===== Настройки ===== */
@@ -1978,8 +1913,8 @@ function renderSettingsModal(body) {
     '<div class="list-row"><div class="lr-name">Время</div><input type="time" id="reminderTimeInput" value="' + reminderTime + '"></div>' +
     '<div class="card-hint">Вечером приходит итог дня. Если записей за день не было, вместо него придёт напоминание внести траты.</div>' +
 
-    '<div class="settings-group-label">Быстрый ввод</div>' +
-    '<button class="list-row" onclick="openModal(\'shortcut\')"><div class="lr-name">Шорткат</div><div class="lr-val">Ввод в одно касание</div><div class="lr-chev">›</div></button>' +
+    '<div class="settings-group-label">Приложение</div>' +
+    '<button class="list-row" onclick="addToHomeScreenFn()"><div class="lr-name">Добавить на главный экран</div><div class="lr-chev">›</div></button>' +
 
     '<div class="settings-group-label">Данные</div>' +
     '<button class="list-row" id="exportCsvBtn" onclick="exportTransactionsCSV()"><div class="lr-name">Экспорт операций в CSV</div><div class="lr-chev">⬇</div></button>' +
