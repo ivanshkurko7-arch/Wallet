@@ -326,10 +326,23 @@
   .receipt-item input[type="number"] { width: 90px; margin-bottom:0; background: rgba(255,255,255,0.06); }
   .receipt-item .r-comment { font-size: 11.5px; color: var(--hint); }
   .receipt-item .r-remove { background:none; border:none; color:#ff6b81; font-size: 15px; flex-shrink:0; }
+  /* ===== Экран загрузки (сплэш) ===== */
+  .splash-screen {
+    position: fixed; inset: 0; z-index: 9999; background: #05070d;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.5s ease; overflow: hidden;
+  }
+  .splash-screen.hide { opacity: 0; pointer-events: none; }
+  .splash-gif { width: 100%; max-width: 480px; height: auto; object-fit: contain; }
 </style>
 
 </head>
 <body>
+
+<div class="splash-screen" id="splashScreen">
+  <img src="/splash-bg.gif" class="splash-gif" alt="Mivaro">
+</div>
+
 
 <div class="topbar">
   <button class="icon-btn" onclick="openMenu()">☰</button>
@@ -2273,7 +2286,15 @@ async function exportTransactionsCSV() {
 }
 
 updatePeriodLabel();
-waitForInitData(2000).then(function () { loadData(); });
+waitForInitData(2000).then(function () {
+  return loadData();
+}).finally(function () {
+  const splash = document.getElementById('splashScreen');
+  if (splash) {
+    splash.classList.add('hide');
+    setTimeout(function () { splash.remove(); }, 600);
+  }
+});
 </script>
 </body>
 </html>
