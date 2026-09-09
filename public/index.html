@@ -333,14 +333,14 @@
     transition: opacity 0.5s ease; overflow: hidden;
   }
   .splash-screen.hide { opacity: 0; pointer-events: none; }
-  .splash-gif { width: 100%; height: 100%; object-fit: cover; }
+  .splash-video { width: 100%; height: 100%; object-fit: cover; }
 </style>
 
 </head>
 <body>
 
 <div class="splash-screen" id="splashScreen">
-  <img src="/splash-bg.gif" class="splash-gif" alt="Mivaro">
+  <video class="splash-video" src="/splash-video.mp4" autoplay muted playsinline webkit-playsinline="true"></video>
 </div>
 
 
