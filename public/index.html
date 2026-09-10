@@ -462,29 +462,29 @@
 <div class="sheet-overlay" id="overlay" onclick="closeOnOverlay(event)">
   <div class="sheet">
     <div class="sheet-head">
-      <h2 id="sheetTitle">Новая операция</h2>
+      <h2 id="sheetTitle" data-i18n="newTransaction">Новая операция</h2>
       <button class="sheet-close" onclick="closeSheet()">✕</button>
     </div>
 
     <div class="type-toggle">
-      <div class="type-btn" id="typeExpenseBtn" onclick="setType('expense')">− Расход</div>
-      <div class="type-btn" id="typeIncomeBtn" onclick="setType('income')">+ Доход</div>
+      <div class="type-btn" id="typeExpenseBtn" onclick="setType('expense')" data-i18n="expenseType">− Расход</div>
+      <div class="type-btn" id="typeIncomeBtn" onclick="setType('income')" data-i18n="incomeType">+ Доход</div>
     </div>
-    <input type="number" inputmode="decimal" id="amountInput" placeholder="Сумма, ₴">
+    <input type="number" inputmode="decimal" id="amountInput" placeholder="Сумма, ₴" data-i18n-ph="amountPlaceholder">
 
-    <label>Дата и время</label>
+    <label data-i18n="dateTime">Дата и время</label>
     <input type="datetime-local" id="dtInput">
 
-    <label>Категория</label>
+    <label data-i18n="category">Категория</label>
     <div class="chip-group" id="catButtons"></div>
 
-    <label>Где хранятся деньги</label>
+    <label data-i18n="whereStored">Где хранятся деньги</label>
     <div class="chip-group" id="accButtons"></div>
 
-    <label>Комментарий (необязательно)</label>
-    <input type="text" id="commentInput" placeholder="Например: обед с коллегами">
+    <label data-i18n="commentOptional">Комментарий (необязательно)</label>
+    <input type="text" id="commentInput" placeholder="Например: обед с коллегами" data-i18n-ph="commentPlaceholder">
 
-    <button class="submit-btn" id="submitBtn" onclick="submitTx()">Добавить</button>
+    <button class="submit-btn" id="submitBtn" onclick="submitTx()" data-i18n="save">Добавить</button>
   </div>
 </div>
 
@@ -627,6 +627,24 @@ const DEFAULT_ACCOUNTS = [
 const CURRENCY_OPTIONS = ['UAH', 'USD', 'EUR', 'GBP', 'PLN'];
 const CURRENCY_SYMBOLS = { UAH: '₴', USD: '$', EUR: '€', GBP: '£', PLN: 'zł' };
 function currencySymbol(code) { return CURRENCY_SYMBOLS[code] || (code || '₴'); }
+
+// Курсы для перевода остатков на счетах в валюте в гривну — задаются вручную в Настройках,
+// потому что живого курса ЦБ/API у нас не подключено. Пока не отредактированы — примерные значения.
+const DEFAULT_EXCHANGE_RATES = { USD: 41, EUR: 43, GBP: 50, PLN: 10 };
+let exchangeRates = loadJSON('walletExchangeRates', DEFAULT_EXCHANGE_RATES);
+CURRENCY_OPTIONS.forEach(function (c) { if (c !== 'UAH' && exchangeRates[c] == null) exchangeRates[c] = DEFAULT_EXCHANGE_RATES[c]; });
+
+// Сумма остатков на всех счетах с указанным балансом, переведённая в гривну по курсам выше.
+function accountsBalanceInUAH() {
+  let total = 0;
+  accounts.forEach(function (a) {
+    if (a.balance == null) return;
+    const cur = a.currency || 'UAH';
+    if (cur === 'UAH') total += Number(a.balance);
+    else total += Number(a.balance) * (exchangeRates[cur] || 0);
+  });
+  return total;
+}
 const CATEGORY_LIMIT = 50;
 
 function loadJSON(key, fallback) {
@@ -670,7 +688,29 @@ const TRANSLATIONS = {
     modalTx: 'Все операции', modalAnalytics: 'Аналитика расходов', modalFamily: 'Участники',
     modalStorage: 'Где хранятся деньги', modalCategories: 'Категории', modalAccounts: 'Счета',
     modalBudgets: 'Бюджеты', modalSettings: 'Настройки',
-    settingsLanguage: 'Язык интерфейса'
+    settingsLanguage: 'Язык интерфейса',
+    settingsTheme: 'Тема', themeSystem: 'Системная', themeLight: 'Светлая', themeDark: 'Тёмная',
+    settingsTime: 'Время', timezone: 'Часовой пояс',
+    settingsReminders: 'Напоминания', dailyReminder: 'Ежедневное напоминание', timeLabel: 'Время',
+    reminderHint: 'Вечером приходит итог дня. Если записей за день не было, вместо него придёт напоминание внести траты.',
+    settingsCurrency: 'Курсы валют', exchangeRatesHint: 'Используются, чтобы остатки на счетах в валюте учитывались в общей сумме баланса. Живой курс не подключён — задайте вручную.',
+    settingsApp: 'Приложение', addToHomeScreen: 'Добавить на главный экран',
+    settingsData: 'Данные', exportCsv: 'Экспорт операций в CSV',
+    settingsMore: 'Ещё', helpSupport: 'Помощь и поддержка', terms: 'Пользовательское соглашение', privacy: 'Политика конфиденциальности', version: 'Версия',
+    helpAlert: 'Напишите нам, если возникли вопросы — мы поможем.',
+    termsAlert: 'Пользовательское соглашение доступно по запросу у команды приложения.',
+    privacyAlert: 'Политика конфиденциальности доступна по запросу у команды приложения.',
+    save: 'Сохранить', delete: 'Удалить', cancel: 'Отмена', close: 'Закрыть',
+    expenseTab: 'Траты', incomeTab: 'Доходы', newCategory: 'Новая категория', categoryNamePlaceholder: 'Например: Спорт', systemBadge: 'системная',
+    newAccount: 'Новый счёт', editAccount: 'Изменить счёт', bankLabel: 'Банк (необязательно)', bankPlaceholder: 'Например: monobank',
+    currentBalanceLabel: 'Сколько сейчас на счету (необязательно)', currencyLabel: 'Валюта', creditAccountLabel: 'Кредитный счёт',
+    deleteCategory: 'Удалить категорию', deleteAccount: 'Удалить счёт',
+    newTransaction: 'Новая операция', editTransaction: 'Изменить операцию', expenseType: '− Расход', incomeType: '+ Доход',
+    amountPlaceholder: 'Сумма, ₴', dateTime: 'Дата и время', category: 'Категория', whereStored: 'Где хранятся деньги',
+    commentOptional: 'Комментарий (необязательно)', commentPlaceholder: 'Например: продукты',
+    editCategory: 'Изменить категорию', systemCategoryAlert: 'Это системная категория. Её нельзя переименовать или удалить.',
+    creditShort: 'кредитный', systemAccountAlert: 'Это системный счёт по умолчанию. Его нельзя удалить, но можно переименовать и заполнить данные.',
+    accountsCountSuffix: 'счетов', accountNamePlaceholder: 'Например: Отпускные', notSpecified: 'Не указано'
   },
   uk: {
     allTime: 'Весь час', totalBalance: 'Загальний баланс', forPeriod: 'за період',
@@ -689,7 +729,29 @@ const TRANSLATIONS = {
     modalTx: 'Всі операції', modalAnalytics: 'Аналітика витрат', modalFamily: 'Учасники',
     modalStorage: 'Де зберігаються гроші', modalCategories: 'Категорії', modalAccounts: 'Рахунки',
     modalBudgets: 'Бюджети', modalSettings: 'Налаштування',
-    settingsLanguage: 'Мова інтерфейсу'
+    settingsLanguage: 'Мова інтерфейсу',
+    settingsTheme: 'Тема', themeSystem: 'Системна', themeLight: 'Світла', themeDark: 'Темна',
+    settingsTime: 'Час', timezone: 'Часовий пояс',
+    settingsReminders: 'Нагадування', dailyReminder: 'Щоденне нагадування', timeLabel: 'Час',
+    reminderHint: 'Увечері приходить підсумок дня. Якщо записів за день не було, замість нього прийде нагадування внести витрати.',
+    settingsCurrency: 'Курси валют', exchangeRatesHint: 'Використовуються, щоб залишки на рахунках у валюті враховувались у загальній сумі балансу. Живий курс не підключено — вкажіть вручну.',
+    settingsApp: 'Додаток', addToHomeScreen: 'Додати на головний екран',
+    settingsData: 'Дані', exportCsv: 'Експорт операцій у CSV',
+    settingsMore: 'Ще', helpSupport: 'Допомога та підтримка', terms: 'Угода користувача', privacy: 'Політика конфіденційності', version: 'Версія',
+    helpAlert: 'Напишіть нам, якщо виникли питання — ми допоможемо.',
+    termsAlert: 'Угода користувача доступна за запитом у команди додатку.',
+    privacyAlert: 'Політика конфіденційності доступна за запитом у команди додатку.',
+    save: 'Зберегти', delete: 'Видалити', cancel: 'Скасувати', close: 'Закрити',
+    expenseTab: 'Витрати', incomeTab: 'Доходи', newCategory: 'Нова категорія', categoryNamePlaceholder: 'Наприклад: Спорт', systemBadge: 'системна',
+    newAccount: 'Новий рахунок', editAccount: 'Змінити рахунок', bankLabel: 'Банк (необов\'язково)', bankPlaceholder: 'Наприклад: monobank',
+    currentBalanceLabel: 'Скільки зараз на рахунку (необов\'язково)', currencyLabel: 'Валюта', creditAccountLabel: 'Кредитний рахунок',
+    deleteCategory: 'Видалити категорію', deleteAccount: 'Видалити рахунок',
+    newTransaction: 'Нова операція', editTransaction: 'Змінити операцію', expenseType: '− Витрата', incomeType: '+ Дохід',
+    amountPlaceholder: 'Сума, ₴', dateTime: 'Дата і час', category: 'Категорія', whereStored: 'Де зберігаються гроші',
+    commentOptional: 'Коментар (необов\'язково)', commentPlaceholder: 'Наприклад: продукти',
+    editCategory: 'Змінити категорію', systemCategoryAlert: 'Це системна категорія. Її не можна перейменувати або видалити.',
+    creditShort: 'кредитний', systemAccountAlert: 'Це системний рахунок за замовчуванням. Його не можна видалити, але можна перейменувати та заповнити дані.',
+    accountsCountSuffix: 'рахунків', accountNamePlaceholder: 'Наприклад: Відпускні', notSpecified: 'Не вказано'
   },
   en: {
     allTime: 'All time', totalBalance: 'Total balance', forPeriod: 'for period',
@@ -708,7 +770,29 @@ const TRANSLATIONS = {
     modalTx: 'All transactions', modalAnalytics: 'Spending analytics', modalFamily: 'Members',
     modalStorage: 'Where money is kept', modalCategories: 'Categories', modalAccounts: 'Accounts',
     modalBudgets: 'Budgets', modalSettings: 'Settings',
-    settingsLanguage: 'Interface language'
+    settingsLanguage: 'Interface language',
+    settingsTheme: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark',
+    settingsTime: 'Time', timezone: 'Timezone',
+    settingsReminders: 'Reminders', dailyReminder: 'Daily reminder', timeLabel: 'Time',
+    reminderHint: "In the evening you'll get a daily summary. If there were no entries that day, you'll get a reminder to log expenses instead.",
+    settingsCurrency: 'Exchange rates', exchangeRatesHint: 'Used so balances on foreign-currency accounts are included in your total balance. No live rate is connected — set it manually.',
+    settingsApp: 'App', addToHomeScreen: 'Add to home screen',
+    settingsData: 'Data', exportCsv: 'Export transactions to CSV',
+    settingsMore: 'More', helpSupport: 'Help & support', terms: 'Terms of use', privacy: 'Privacy policy', version: 'Version',
+    helpAlert: "Message us if you have any questions — we'll help.",
+    termsAlert: 'Terms of use are available on request from the app team.',
+    privacyAlert: 'Privacy policy is available on request from the app team.',
+    save: 'Save', delete: 'Delete', cancel: 'Cancel', close: 'Close',
+    expenseTab: 'Expenses', incomeTab: 'Income', newCategory: 'New category', categoryNamePlaceholder: 'E.g. Sports', systemBadge: 'system',
+    newAccount: 'New account', editAccount: 'Edit account', bankLabel: 'Bank (optional)', bankPlaceholder: 'E.g. Chase',
+    currentBalanceLabel: 'Current balance (optional)', currencyLabel: 'Currency', creditAccountLabel: 'Credit account',
+    deleteCategory: 'Delete category', deleteAccount: 'Delete account',
+    newTransaction: 'New transaction', editTransaction: 'Edit transaction', expenseType: '− Expense', incomeType: '+ Income',
+    amountPlaceholder: 'Amount, ₴', dateTime: 'Date and time', category: 'Category', whereStored: 'Where money is kept',
+    commentOptional: 'Comment (optional)', commentPlaceholder: 'E.g. groceries',
+    editCategory: 'Edit category', systemCategoryAlert: 'This is a system category. It cannot be renamed or deleted.',
+    creditShort: 'credit', systemAccountAlert: 'This is a default system account. It cannot be deleted, but can be renamed and filled in.',
+    accountsCountSuffix: 'accounts', accountNamePlaceholder: 'E.g. Vacation fund', notSpecified: 'Not specified'
   },
   de: {
     allTime: 'Gesamte Zeit', totalBalance: 'Gesamtsaldo', forPeriod: 'für den Zeitraum',
@@ -727,7 +811,29 @@ const TRANSLATIONS = {
     modalTx: 'Alle Buchungen', modalAnalytics: 'Ausgabenanalyse', modalFamily: 'Mitglieder',
     modalStorage: 'Wo das Geld liegt', modalCategories: 'Kategorien', modalAccounts: 'Konten',
     modalBudgets: 'Budgets', modalSettings: 'Einstellungen',
-    settingsLanguage: 'Sprache der Oberfläche'
+    settingsLanguage: 'Sprache der Oberfläche',
+    settingsTheme: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel',
+    settingsTime: 'Zeit', timezone: 'Zeitzone',
+    settingsReminders: 'Erinnerungen', dailyReminder: 'Tägliche Erinnerung', timeLabel: 'Uhrzeit',
+    reminderHint: 'Abends erhältst du eine Tageszusammenfassung. Gab es keine Einträge, bekommst du stattdessen eine Erinnerung.',
+    settingsCurrency: 'Wechselkurse', exchangeRatesHint: 'Werden verwendet, damit Salden auf Fremdwährungskonten im Gesamtsaldo berücksichtigt werden. Kein Live-Kurs verbunden — bitte manuell eingeben.',
+    settingsApp: 'App', addToHomeScreen: 'Zum Startbildschirm hinzufügen',
+    settingsData: 'Daten', exportCsv: 'Buchungen als CSV exportieren',
+    settingsMore: 'Mehr', helpSupport: 'Hilfe & Support', terms: 'Nutzungsbedingungen', privacy: 'Datenschutzrichtlinie', version: 'Version',
+    helpAlert: 'Schreib uns bei Fragen — wir helfen gerne.',
+    termsAlert: 'Die Nutzungsbedingungen sind auf Anfrage beim App-Team erhältlich.',
+    privacyAlert: 'Die Datenschutzrichtlinie ist auf Anfrage beim App-Team erhältlich.',
+    save: 'Speichern', delete: 'Löschen', cancel: 'Abbrechen', close: 'Schließen',
+    expenseTab: 'Ausgaben', incomeTab: 'Einnahmen', newCategory: 'Neue Kategorie', categoryNamePlaceholder: 'Z. B. Sport', systemBadge: 'System',
+    newAccount: 'Neues Konto', editAccount: 'Konto bearbeiten', bankLabel: 'Bank (optional)', bankPlaceholder: 'Z. B. monobank',
+    currentBalanceLabel: 'Aktueller Kontostand (optional)', currencyLabel: 'Währung', creditAccountLabel: 'Kreditkonto',
+    deleteCategory: 'Kategorie löschen', deleteAccount: 'Konto löschen',
+    newTransaction: 'Neue Buchung', editTransaction: 'Buchung bearbeiten', expenseType: '− Ausgabe', incomeType: '+ Einnahme',
+    amountPlaceholder: 'Betrag, ₴', dateTime: 'Datum und Uhrzeit', category: 'Kategorie', whereStored: 'Wo das Geld liegt',
+    commentOptional: 'Kommentar (optional)', commentPlaceholder: 'Z. B. Lebensmittel',
+    editCategory: 'Kategorie bearbeiten', systemCategoryAlert: 'Dies ist eine Systemkategorie. Sie kann nicht umbenannt oder gelöscht werden.',
+    creditShort: 'Kredit', systemAccountAlert: 'Dies ist ein Standard-Systemkonto. Es kann nicht gelöscht, aber umbenannt und ausgefüllt werden.',
+    accountsCountSuffix: 'Konten', accountNamePlaceholder: 'Z. B. Urlaubskasse', notSpecified: 'Nicht angegeben'
   }
 };
 function t(key) {
@@ -736,6 +842,9 @@ function t(key) {
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(function (el) {
     el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function (el) {
+    el.placeholder = t(el.getAttribute('data-i18n-ph'));
   });
 }
 function setWalletLang(lang) {
@@ -979,7 +1088,8 @@ async function loadData() {
       accountsWereLocal = true;
     }
 
-    const overallBalance = summary.overall_balance != null ? summary.overall_balance : summary.balance;
+    const txBalance = summary.overall_balance != null ? summary.overall_balance : summary.balance;
+    const overallBalance = txBalance + accountsBalanceInUAH();
     document.getElementById('balance').textContent = fmt(overallBalance) + ' ₴';
 
     const periodNet = summary.total_income - summary.total_expense;
@@ -1476,8 +1586,8 @@ function renderCatButtons(preselect) {
 
 function openSheet(type, txToEdit) {
   editingId = txToEdit ? txToEdit.id : null;
-  document.getElementById('sheetTitle').textContent = editingId ? 'Изменить операцию' : 'Новая операция';
-  document.getElementById('submitBtn').textContent = editingId ? 'Сохранить' : 'Добавить';
+  document.getElementById('sheetTitle').textContent = editingId ? t('editTransaction') : t('newTransaction');
+  document.getElementById('submitBtn').textContent = editingId ? t('save') : t('add');
   document.getElementById('overlay').classList.add('open');
   try {
     document.getElementById('amountInput').value = txToEdit ? txToEdit.amount : '';
@@ -1569,12 +1679,12 @@ function closeOnMenuOverlay(e) { if (e.target.id === 'menuOverlay') closeMenu();
 function renderCategoriesModal(body) {
   body.innerHTML =
     '<div class="seg-toggle">' +
-    '<button class="seg-btn" id="catTabExpense">Траты</button>' +
-    '<button class="seg-btn" id="catTabIncome">Доходы</button>' +
+    '<button class="seg-btn" id="catTabExpense">' + t('expenseTab') + '</button>' +
+    '<button class="seg-btn" id="catTabIncome">' + t('incomeTab') + '</button>' +
     '</div>' +
     '<div id="catList"></div>' +
     '<div class="cat-count" id="catCount"></div>' +
-    '<button class="add-cat-btn" onclick="openCategoryPrompt(null)">+ Новая категория</button>';
+    '<button class="add-cat-btn" onclick="openCategoryPrompt(null)">+ ' + t('newCategory') + '</button>';
   document.getElementById('catTabExpense').onclick = function () { renderCatTab('expense'); };
   document.getElementById('catTabIncome').onclick = function () { renderCatTab('income'); };
   renderCatTab(window.__catTab || 'expense');
@@ -1592,10 +1702,10 @@ function renderCatTab(tab) {
     row.innerHTML =
       '<div class="cat-icon">' + (c.icon || '🏷️') + '</div>' +
       '<div class="cat-name">' + c.name + '</div>' +
-      (c.system ? '<div class="cat-tag">системная</div>' : '') +
+      (c.system ? '<div class="cat-tag">' + t('systemBadge') + '</div>' : '') +
       '<div class="cat-chev">›</div>';
     row.onclick = function () {
-      if (c.system) { tg.showAlert('Это системная категория. Её нельзя переименовать или удалить.'); return; }
+      if (c.system) { tg.showAlert(t('systemCategoryAlert')); return; }
       openCategoryPrompt({ type: tab, index: i });
     };
     listEl.appendChild(row);
@@ -1609,14 +1719,14 @@ function openCategoryPrompt(editing) {
   const tab = editing ? editing.type : (window.__catTab || 'expense');
   const list = tab === 'expense' ? expenseCategories : incomeCategories;
   const item = editing ? list[editing.index] : null;
-  document.getElementById('promptTitle').textContent = editing ? 'Изменить категорию' : 'Новая категория';
+  document.getElementById('promptTitle').textContent = editing ? t('editCategory') : t('newCategory');
   document.getElementById('promptBody').innerHTML =
     '<div class="icon-input-row">' +
     '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '🏷️') + '">' +
-    '<input type="text" id="promptName" placeholder="Например: Спорт" value="' + (item ? item.name : '') + '" style="flex:1;">' +
+    '<input type="text" id="promptName" placeholder="' + t('categoryNamePlaceholder') + '" value="' + (item ? item.name : '') + '" style="flex:1;">' +
     '</div>' +
-    '<button class="submit-btn" onclick="savePromptCategory()">Сохранить</button>' +
-    (item && !item.system ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptCategory()">Удалить категорию</button>' : '');
+    '<button class="submit-btn" onclick="savePromptCategory()">' + t('save') + '</button>' +
+    (item && !item.system ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptCategory()">' + t('deleteCategory') + '</button>' : '');
   openPrompt();
 }
 function savePromptCategory() {
@@ -1677,7 +1787,7 @@ function persistCategories(tab) {
 function renderAccountsModal(body) {
   body.innerHTML = '<div id="accList"></div>' +
     '<div class="cat-count" id="accCount"></div>' +
-    '<button class="add-cat-btn" onclick="openAccountPrompt(null)">+ Новый счёт</button>';
+    '<button class="add-cat-btn" onclick="openAccountPrompt(null)">+ ' + t('newAccount') + '</button>';
   renderAccList();
 }
 function renderAccList() {
@@ -1688,42 +1798,42 @@ function renderAccList() {
     row.className = 'cat-row';
     const sub = [];
     if (a.bank) sub.push(a.bank);
-    if (a.isCredit) sub.push('кредитный');
+    if (a.isCredit) sub.push(t('creditShort'));
     if (a.balance != null) sub.push(fmt(a.balance) + ' ' + currencySymbol(a.currency));
     row.innerHTML =
       '<div class="cat-icon">' + (a.icon || '📦') + '</div>' +
       '<div class="cat-name">' + a.name + (sub.length ? '<div class="lr-sub">' + sub.join(' · ') + '</div>' : '') + '</div>' +
-      (a.system ? '<div class="cat-tag">системный</div>' : '') +
+      (a.system ? '<div class="cat-tag">' + t('systemBadge') + '</div>' : '') +
       '<div class="cat-chev">›</div>';
     row.onclick = function () {
-      if (a.system) { tg.showAlert('Это системный счёт по умолчанию. Его нельзя удалить, но можно переименовать и заполнить данные.'); }
+      if (a.system) { tg.showAlert(t('systemAccountAlert')); }
       openAccountPrompt(i);
     };
     listEl.appendChild(row);
   });
-  document.getElementById('accCount').textContent = accounts.length + ' счетов';
+  document.getElementById('accCount').textContent = accounts.length + ' ' + t('accountsCountSuffix');
 }
 function openAccountPrompt(index) {
   promptMode = 'account';
   promptEditingIndex = index;
   const item = index != null ? accounts[index] : null;
   const currency = item ? (item.currency || 'UAH') : 'UAH';
-  document.getElementById('promptTitle').textContent = item ? 'Изменить счёт' : 'Новый счёт';
+  document.getElementById('promptTitle').textContent = item ? t('editAccount') : t('newAccount');
   document.getElementById('promptBody').innerHTML =
     '<div class="icon-input-row">' +
     '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '💳') + '">' +
-    '<input type="text" id="promptName" placeholder="Например: Сберкнижка" value="' + (item ? item.name : '') + '" style="flex:1;">' +
+    '<input type="text" id="promptName" placeholder="' + t('accountNamePlaceholder') + '" value="' + (item ? item.name : '') + '" style="flex:1;">' +
     '</div>' +
-    '<label>Банк (необязательно)</label>' +
-    '<input type="text" id="promptBank" placeholder="Например: monobank" value="' + (item ? (item.bank || '') : '') + '">' +
-    '<label>Сколько сейчас на счету (необязательно)</label>' +
-    '<input type="number" inputmode="decimal" id="promptBalance" placeholder="Не указано" value="' + (item && item.balance != null ? item.balance : '') + '">' +
-    '<label>Валюта</label>' +
+    '<label>' + t('bankLabel') + '</label>' +
+    '<input type="text" id="promptBank" placeholder="' + t('bankPlaceholder') + '" value="' + (item ? (item.bank || '') : '') + '">' +
+    '<label>' + t('currentBalanceLabel') + '</label>' +
+    '<input type="number" inputmode="decimal" id="promptBalance" placeholder="' + t('notSpecified') + '" value="' + (item && item.balance != null ? item.balance : '') + '">' +
+    '<label>' + t('currencyLabel') + '</label>' +
     '<div class="chip-group" id="promptCurrencyChips"></div>' +
-    '<div class="list-row"><div class="lr-name">Кредитный счёт</div>' +
+    '<div class="list-row"><div class="lr-name">' + t('creditAccountLabel') + '</div>' +
     '<label class="toggle-switch"><input type="checkbox" id="promptIsCredit" ' + (item && item.isCredit ? 'checked' : '') + '><span class="slider"></span></label></div>' +
-    '<button class="submit-btn" style="margin-top:14px;" onclick="savePromptAccount()">Сохранить</button>' +
-    (item && !item.system && accounts.length > 1 ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptAccount()">Удалить счёт</button>' : '');
+    '<button class="submit-btn" style="margin-top:14px;" onclick="savePromptAccount()">' + t('save') + '</button>' +
+    (item && !item.system && accounts.length > 1 ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deletePromptAccount()">' + t('deleteAccount') + '</button>' : '');
   const chipsEl = document.getElementById('promptCurrencyChips');
   CURRENCY_OPTIONS.forEach(function (c) {
     const chip = document.createElement('div');
@@ -1908,35 +2018,54 @@ function renderSettingsModal(body) {
     '<div class="settings-group-label">' + t('settingsLanguage') + '</div>' +
     '<div class="chip-group" id="langChips" style="flex-wrap:wrap;"></div>' +
 
-    '<div class="settings-group-label">Тема</div>' +
+    '<div class="settings-group-label">' + t('settingsTheme') + '</div>' +
     '<div class="seg-toggle">' +
-    '<button class="seg-btn" id="themeSystemBtn">Системная</button>' +
-    '<button class="seg-btn" id="themeLightBtn">Светлая</button>' +
-    '<button class="seg-btn" id="themeDarkBtn">Тёмная</button>' +
+    '<button class="seg-btn" id="themeSystemBtn">' + t('themeSystem') + '</button>' +
+    '<button class="seg-btn" id="themeLightBtn">' + t('themeLight') + '</button>' +
+    '<button class="seg-btn" id="themeDarkBtn">' + t('themeDark') + '</button>' +
     '</div>' +
 
-    '<div class="settings-group-label">Время</div>' +
+    '<div class="settings-group-label">' + t('settingsTime') + '</div>' +
     '<button class="list-row" onclick="openTimezonePrompt()">' +
-    '<div class="lr-name">Часовой пояс</div>' +
+    '<div class="lr-name">' + t('timezone') + '</div>' +
     '<div class="lr-val">' + tzLabel(walletTimezone) + '</div><div class="lr-chev">›</div></button>' +
 
-    '<div class="settings-group-label">Напоминания</div>' +
-    '<div class="list-row"><div class="lr-name">Ежедневное напоминание</div>' +
+    '<div class="settings-group-label">' + t('settingsReminders') + '</div>' +
+    '<div class="list-row"><div class="lr-name">' + t('dailyReminder') + '</div>' +
     '<label class="toggle-switch"><input type="checkbox" id="reminderToggle" ' + (reminderEnabled ? 'checked' : '') + '><span class="slider"></span></label></div>' +
-    '<div class="list-row"><div class="lr-name">Время</div><input type="time" id="reminderTimeInput" value="' + reminderTime + '"></div>' +
-    '<div class="card-hint">Вечером приходит итог дня. Если записей за день не было, вместо него придёт напоминание внести траты.</div>' +
+    '<div class="list-row"><div class="lr-name">' + t('timeLabel') + '</div><input type="time" id="reminderTimeInput" value="' + reminderTime + '"></div>' +
+    '<div class="card-hint">' + t('reminderHint') + '</div>' +
 
-    '<div class="settings-group-label">Приложение</div>' +
-    '<button class="list-row" onclick="addToHomeScreenFn()"><div class="lr-name">Добавить на главный экран</div><div class="lr-chev">›</div></button>' +
+    '<div class="settings-group-label">' + t('settingsCurrency') + '</div>' +
+    '<div id="exchangeRatesList"></div>' +
+    '<div class="card-hint">' + t('exchangeRatesHint') + '</div>' +
 
-    '<div class="settings-group-label">Данные</div>' +
-    '<button class="list-row" id="exportCsvBtn" onclick="exportTransactionsCSV()"><div class="lr-name">Экспорт операций в CSV</div><div class="lr-chev">⬇</div></button>' +
+    '<div class="settings-group-label">' + t('settingsApp') + '</div>' +
+    '<button class="list-row" onclick="addToHomeScreenFn()"><div class="lr-name">' + t('addToHomeScreen') + '</div><div class="lr-chev">›</div></button>' +
 
-    '<div class="settings-group-label">Ещё</div>' +
-    '<button class="list-row" onclick="tg.showAlert(\'Напишите нам, если возникли вопросы — мы поможем.\')"><div class="lr-name">Помощь и поддержка</div><div class="lr-chev">›</div></button>' +
-    '<button class="list-row" onclick="tg.showAlert(\'Пользовательское соглашение доступно по запросу у команды приложения.\')"><div class="lr-name">Пользовательское соглашение</div><div class="lr-chev">›</div></button>' +
-    '<button class="list-row" onclick="tg.showAlert(\'Политика конфиденциальности доступна по запросу у команды приложения.\')"><div class="lr-name">Политика конфиденциальности</div><div class="lr-chev">›</div></button>' +
-    '<div class="list-row"><div class="lr-name">Версия</div><div class="lr-val">1.0.0</div></div>';
+    '<div class="settings-group-label">' + t('settingsData') + '</div>' +
+    '<button class="list-row" id="exportCsvBtn" onclick="exportTransactionsCSV()"><div class="lr-name">' + t('exportCsv') + '</div><div class="lr-chev">⬇</div></button>' +
+
+    '<div class="settings-group-label">' + t('settingsMore') + '</div>' +
+    '<button class="list-row" onclick="tg.showAlert(t(\'helpAlert\'))"><div class="lr-name">' + t('helpSupport') + '</div><div class="lr-chev">›</div></button>' +
+    '<button class="list-row" onclick="tg.showAlert(t(\'termsAlert\'))"><div class="lr-name">' + t('terms') + '</div><div class="lr-chev">›</div></button>' +
+    '<button class="list-row" onclick="tg.showAlert(t(\'privacyAlert\'))"><div class="lr-name">' + t('privacy') + '</div><div class="lr-chev">›</div></button>' +
+    '<div class="list-row"><div class="lr-name">' + t('version') + '</div><div class="lr-val">1.0.0</div></div>';
+
+  const ratesList = document.getElementById('exchangeRatesList');
+  ['USD', 'EUR', 'GBP', 'PLN'].forEach(function (cur) {
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.innerHTML =
+      '<div class="lr-name">1 ' + cur + ' = ? ₴</div>' +
+      '<input type="number" inputmode="decimal" style="width:80px; text-align:right;" data-cur="' + cur + '" value="' + exchangeRates[cur] + '">';
+    ratesList.appendChild(row);
+    row.querySelector('input').onchange = function (e) {
+      exchangeRates[cur] = Number(e.target.value) || 0;
+      saveJSON('walletExchangeRates', exchangeRates);
+      if (lastSummary) loadData();
+    };
+  });
 
   const langChips = document.getElementById('langChips');
   Object.keys(LANG_NAMES).forEach(function (code) {
