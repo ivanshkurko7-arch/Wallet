@@ -620,7 +620,7 @@ const DEFAULT_INCOME_CATEGORIES = [
 const DEFAULT_ACCOUNTS = [
   { name: 'Карта', icon: '💳', system: false, currency: 'UAH', bank: '', balance: null, isCredit: false },
   { name: 'Наличные', icon: '💵', system: true, currency: 'UAH', bank: '', balance: null, isCredit: false },
-  { name: 'Валюта', icon: '💱', system: false, currency: 'USD', bank: '', balance: null, isCredit: false },
+  { name: 'Валюта', icon: '💱', system: false, currency: 'USD', bank: '', balance: null, isCredit: false, isMultiCurrency: true, currencyHoldings: [] },
   { name: 'Крипта', icon: '₿', system: false, currency: 'USD', bank: '', balance: null, isCredit: false },
   { name: 'Другое', icon: '📦', system: false, currency: 'UAH', bank: '', balance: null, isCredit: false }
 ];
@@ -638,6 +638,13 @@ CURRENCY_OPTIONS.forEach(function (c) { if (c !== 'UAH' && exchangeRates[c] == n
 function accountsBalanceInUAH() {
   let total = 0;
   accounts.forEach(function (a) {
+    if (a.isMultiCurrency) {
+      (a.currencyHoldings || []).forEach(function (h) {
+        const amt = Number(h.amount) || 0;
+        total += h.currency === 'UAH' ? amt : amt * (exchangeRates[h.currency] || 0);
+      });
+      return;
+    }
     if (a.balance == null) return;
     const cur = a.currency || 'UAH';
     if (cur === 'UAH') total += Number(a.balance);
@@ -663,6 +670,13 @@ accounts.forEach(function (a) {
   if (a.bank == null) a.bank = '';
   if (a.balance === undefined) a.balance = null;
   if (a.isCredit == null) a.isCredit = false;
+  if (a.isMultiCurrency == null) a.isMultiCurrency = (a.name === 'Валюта');
+  if (a.currencyHoldings == null) a.currencyHoldings = [];
+  // Миграция: если раньше был вписан один баланс в иностранной валюте — переносим его первой строкой в список
+  if (a.isMultiCurrency && a.currencyHoldings.length === 0 && a.balance != null && a.currency && a.currency !== 'UAH') {
+    a.currencyHoldings.push({ currency: a.currency, amount: Number(a.balance) });
+    a.balance = null;
+  }
 });
 let budgets = loadJSON('walletBudgets', {});
 let walletTheme = localStorage.getItem('walletTheme') || 'system';
@@ -710,7 +724,10 @@ const TRANSLATIONS = {
     commentOptional: 'Комментарий (необязательно)', commentPlaceholder: 'Например: продукты',
     editCategory: 'Изменить категорию', systemCategoryAlert: 'Это системная категория. Её нельзя переименовать или удалить.',
     creditShort: 'кредитный', systemAccountAlert: 'Это системный счёт по умолчанию. Его нельзя удалить, но можно переименовать и заполнить данные.',
-    accountsCountSuffix: 'счетов', accountNamePlaceholder: 'Например: Отпускные', notSpecified: 'Не указано'
+    accountsCountSuffix: 'счетов', accountNamePlaceholder: 'Например: Отпускные', notSpecified: 'Не указано',
+    currencyHoldingsHint: 'Укажите каждую валюту и сумму отдельной строкой — все они будут переведены в гривну по курсам из Настроек и добавлены в общий баланс.',
+    addCurrency: 'Добавить валюту', ownAccount: 'свой', allAccounts: 'Все счета', manage: 'Управлять',
+    accountsTotalPrefix: 'Итого по счетам с указанным балансом:', accountsTotalIncludedNote: 'уже учтено в общем балансе по курсу из Настроек'
   },
   uk: {
     allTime: 'Весь час', totalBalance: 'Загальний баланс', forPeriod: 'за період',
@@ -751,7 +768,10 @@ const TRANSLATIONS = {
     commentOptional: 'Коментар (необов\'язково)', commentPlaceholder: 'Наприклад: продукти',
     editCategory: 'Змінити категорію', systemCategoryAlert: 'Це системна категорія. Її не можна перейменувати або видалити.',
     creditShort: 'кредитний', systemAccountAlert: 'Це системний рахунок за замовчуванням. Його не можна видалити, але можна перейменувати та заповнити дані.',
-    accountsCountSuffix: 'рахунків', accountNamePlaceholder: 'Наприклад: Відпускні', notSpecified: 'Не вказано'
+    accountsCountSuffix: 'рахунків', accountNamePlaceholder: 'Наприклад: Відпускні', notSpecified: 'Не вказано',
+    currencyHoldingsHint: 'Вкажіть кожну валюту і суму окремим рядком — усі вони будуть переведені в гривню за курсами з Налаштувань і додані до загального балансу.',
+    addCurrency: 'Додати валюту', ownAccount: 'свій', allAccounts: 'Усі рахунки', manage: 'Керувати',
+    accountsTotalPrefix: 'Разом по рахунках з вказаним балансом:', accountsTotalIncludedNote: 'вже враховано в загальному балансі за курсом з Налаштувань'
   },
   en: {
     allTime: 'All time', totalBalance: 'Total balance', forPeriod: 'for period',
@@ -792,7 +812,10 @@ const TRANSLATIONS = {
     commentOptional: 'Comment (optional)', commentPlaceholder: 'E.g. groceries',
     editCategory: 'Edit category', systemCategoryAlert: 'This is a system category. It cannot be renamed or deleted.',
     creditShort: 'credit', systemAccountAlert: 'This is a default system account. It cannot be deleted, but can be renamed and filled in.',
-    accountsCountSuffix: 'accounts', accountNamePlaceholder: 'E.g. Vacation fund', notSpecified: 'Not specified'
+    accountsCountSuffix: 'accounts', accountNamePlaceholder: 'E.g. Vacation fund', notSpecified: 'Not specified',
+    currencyHoldingsHint: 'List each currency and amount as a separate line — all of them will be converted to UAH using the rates from Settings and added to your total balance.',
+    addCurrency: 'Add currency', ownAccount: 'own', allAccounts: 'All accounts', manage: 'Manage',
+    accountsTotalPrefix: 'Total across accounts with a set balance:', accountsTotalIncludedNote: 'already included in the total balance at the rate from Settings'
   },
   de: {
     allTime: 'Gesamte Zeit', totalBalance: 'Gesamtsaldo', forPeriod: 'für den Zeitraum',
@@ -833,7 +856,10 @@ const TRANSLATIONS = {
     commentOptional: 'Kommentar (optional)', commentPlaceholder: 'Z. B. Lebensmittel',
     editCategory: 'Kategorie bearbeiten', systemCategoryAlert: 'Dies ist eine Systemkategorie. Sie kann nicht umbenannt oder gelöscht werden.',
     creditShort: 'Kredit', systemAccountAlert: 'Dies ist ein Standard-Systemkonto. Es kann nicht gelöscht, aber umbenannt und ausgefüllt werden.',
-    accountsCountSuffix: 'Konten', accountNamePlaceholder: 'Z. B. Urlaubskasse', notSpecified: 'Nicht angegeben'
+    accountsCountSuffix: 'Konten', accountNamePlaceholder: 'Z. B. Urlaubskasse', notSpecified: 'Nicht angegeben',
+    currencyHoldingsHint: 'Gib jede Währung und jeden Betrag als eigene Zeile an — alle werden zum Kurs aus den Einstellungen in UAH umgerechnet und dem Gesamtsaldo hinzugefügt.',
+    addCurrency: 'Währung hinzufügen', ownAccount: 'eigen', allAccounts: 'Alle Konten', manage: 'Verwalten',
+    accountsTotalPrefix: 'Summe der Konten mit angegebenem Saldo:', accountsTotalIncludedNote: 'bereits im Gesamtsaldo zum Kurs aus den Einstellungen enthalten'
   }
 };
 function t(key) {
@@ -1797,9 +1823,13 @@ function renderAccList() {
     const row = document.createElement('button');
     row.className = 'cat-row';
     const sub = [];
-    if (a.bank) sub.push(a.bank);
-    if (a.isCredit) sub.push(t('creditShort'));
-    if (a.balance != null) sub.push(fmt(a.balance) + ' ' + currencySymbol(a.currency));
+    if (a.isMultiCurrency) {
+      (a.currencyHoldings || []).forEach(function (h) { sub.push(fmt(h.amount) + ' ' + currencySymbol(h.currency)); });
+    } else {
+      if (a.bank) sub.push(a.bank);
+      if (a.isCredit) sub.push(t('creditShort'));
+      if (a.balance != null) sub.push(fmt(a.balance) + ' ' + currencySymbol(a.currency));
+    }
     row.innerHTML =
       '<div class="cat-icon">' + (a.icon || '📦') + '</div>' +
       '<div class="cat-name">' + a.name + (sub.length ? '<div class="lr-sub">' + sub.join(' · ') + '</div>' : '') + '</div>' +
@@ -1814,6 +1844,8 @@ function renderAccList() {
   document.getElementById('accCount').textContent = accounts.length + ' ' + t('accountsCountSuffix');
 }
 function openAccountPrompt(index) {
+  const existing = index != null ? accounts[index] : null;
+  if (existing && existing.isMultiCurrency) { openCurrencyHoldingsPrompt(index); return; }
   promptMode = 'account';
   promptEditingIndex = index;
   const item = index != null ? accounts[index] : null;
@@ -1870,6 +1902,61 @@ function savePromptAccount() {
   refreshAllAccountsPreview();
   tg.HapticFeedback.notificationOccurred('success');
 }
+
+/* ===== Список валют внутри мультивалютного счёта (например, "Валюта") ===== */
+let currencyHoldingsDraft = [];
+let currencyHoldingsAccountIndex = null;
+function openCurrencyHoldingsPrompt(index) {
+  currencyHoldingsAccountIndex = index;
+  const acc = accounts[index];
+  // Работаем с копией, чтобы отмена (закрыть без сохранения) не портила исходные данные
+  currencyHoldingsDraft = (acc.currencyHoldings || []).map(function (h) { return { currency: h.currency, amount: h.amount }; });
+  promptMode = 'currencyHoldings';
+  document.getElementById('promptTitle').textContent = acc.name;
+  renderCurrencyHoldingsPrompt();
+  openPrompt();
+}
+function renderCurrencyHoldingsPrompt() {
+  const body = document.getElementById('promptBody');
+  body.innerHTML = '<div class="card-hint" style="margin-bottom:12px;">' + t('currencyHoldingsHint') + '</div>' +
+    '<div id="currencyHoldingsList"></div>' +
+    '<button class="add-cat-btn" style="margin-top:4px;" onclick="addCurrencyHoldingRow()">+ ' + t('addCurrency') + '</button>' +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="saveCurrencyHoldings()">' + t('save') + '</button>';
+  const listEl = document.getElementById('currencyHoldingsList');
+  listEl.innerHTML = '';
+  currencyHoldingsDraft.forEach(function (h, i) {
+    const row = document.createElement('div');
+    row.className = 'icon-input-row';
+    row.style.marginBottom = '8px';
+    const options = CURRENCY_OPTIONS.filter(function (c) { return c !== 'UAH'; }).map(function (c) {
+      return '<option value="' + c + '"' + (c === h.currency ? ' selected' : '') + '>' + currencySymbol(c) + ' ' + c + '</option>';
+    }).join('');
+    row.innerHTML =
+      '<select data-i="' + i + '" class="ch-currency" style="flex:0 0 110px; background:rgba(255,255,255,0.06); color:white; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px; font-family:inherit; font-size:14px;">' + options + '</select>' +
+      '<input type="number" inputmode="decimal" data-i="' + i + '" class="ch-amount" placeholder="' + t('amountPlaceholder') + '" value="' + h.amount + '" style="flex:1;">' +
+      '<button class="key-copy-btn" data-i="' + i + '" style="color:#ff6b81; font-size:18px; padding:0 6px;">✕</button>';
+    listEl.appendChild(row);
+    row.querySelector('.ch-currency').onchange = function (e) { currencyHoldingsDraft[i].currency = e.target.value; };
+    row.querySelector('.ch-amount').onchange = function (e) { currencyHoldingsDraft[i].amount = Number(e.target.value) || 0; };
+    row.querySelector('button').onclick = function () { currencyHoldingsDraft.splice(i, 1); renderCurrencyHoldingsPrompt(); };
+  });
+}
+function addCurrencyHoldingRow() {
+  const used = currencyHoldingsDraft.map(function (h) { return h.currency; });
+  const free = CURRENCY_OPTIONS.filter(function (c) { return c !== 'UAH' && used.indexOf(c) === -1; });
+  currencyHoldingsDraft.push({ currency: free[0] || 'USD', amount: 0 });
+  renderCurrencyHoldingsPrompt();
+}
+function saveCurrencyHoldings() {
+  accounts[currencyHoldingsAccountIndex].currencyHoldings = currencyHoldingsDraft.filter(function (h) { return h.amount; });
+  persistAccounts();
+  closePrompt();
+  renderAccList();
+  refreshAllAccountsPreview();
+  if (lastSummary) loadData();
+  tg.HapticFeedback.notificationOccurred('success');
+}
+
 function deletePromptAccount() {
   const name = accounts[promptEditingIndex].name;
   tg.showConfirm('Удалить счёт «' + name + '»? Старые операции сохранят это название.', function (ok) {
@@ -1887,11 +1974,17 @@ function renderAllAccountsSection(container) {
   container.innerHTML = '';
   const head = document.createElement('div');
   head.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin:16px 0 10px;';
-  head.innerHTML = '<div style="font-size:13px; font-weight:700;">Все счета</div><button class="more" style="background:none;border:none;" onclick="openModal(\'accounts\')">Управлять ></button>';
+  head.innerHTML = '<div style="font-size:13px; font-weight:700;">' + t('allAccounts') + '</div><button class="more" style="background:none;border:none;" onclick="openModal(\'accounts\')">' + t('manage') + ' ></button>';
   container.appendChild(head);
 
   let totalByCurrency = {};
   accounts.forEach(function (a) {
+    if (a.isMultiCurrency) {
+      (a.currencyHoldings || []).forEach(function (h) {
+        totalByCurrency[h.currency] = (totalByCurrency[h.currency] || 0) + Number(h.amount);
+      });
+      return;
+    }
     if (a.balance == null) return;
     const cur = a.currency || 'UAH';
     totalByCurrency[cur] = (totalByCurrency[cur] || 0) + Number(a.balance);
@@ -1901,13 +1994,21 @@ function renderAllAccountsSection(container) {
     const row = document.createElement('div');
     row.className = 'budget-row';
     const sub = [];
-    if (a.bank) sub.push(a.bank);
-    sub.push(a.isCredit ? '💳 кредитный' : '✅ свой');
+    let valText;
+    if (a.isMultiCurrency) {
+      const holdings = a.currencyHoldings || [];
+      valText = holdings.length ? holdings.map(function (h) { return fmt(h.amount) + ' ' + currencySymbol(h.currency); }).join(' + ') : t('notSpecified');
+      sub.push(a.isCredit ? '💳 ' + t('creditShort') : '✅ ' + t('ownAccount'));
+    } else {
+      if (a.bank) sub.push(a.bank);
+      sub.push(a.isCredit ? '💳 ' + t('creditShort') : '✅ ' + t('ownAccount'));
+      valText = a.balance != null ? fmt(a.balance) + ' ' + currencySymbol(a.currency) : t('notSpecified');
+    }
     row.innerHTML =
       '<div class="budget-top">' +
       '<div class="cat-icon">' + (a.icon || '📦') + '</div>' +
       '<div class="cat-name">' + a.name + '<div class="lr-sub">' + sub.join(' · ') + '</div></div>' +
-      '<div class="budget-val' + (a.balance != null ? ' set' : '') + '">' + (a.balance != null ? fmt(a.balance) + ' ' + currencySymbol(a.currency) : 'не указано') + '</div>' +
+      '<div class="budget-val' + (valText !== t('notSpecified') ? ' set' : '') + '">' + valText + '</div>' +
       '</div>';
     container.appendChild(row);
   });
@@ -1917,9 +2018,9 @@ function renderAllAccountsSection(container) {
     const totalsEl = document.createElement('div');
     totalsEl.className = 'card-hint';
     totalsEl.style.marginTop = '10px';
-    totalsEl.textContent = 'Итого по счетам с указанным балансом: ' +
+    totalsEl.textContent = t('accountsTotalPrefix') + ' ' +
       currencies.map(function (c) { return fmt(totalByCurrency[c]) + ' ' + currencySymbol(c); }).join(' + ') +
-      (currencies.length > 1 ? ' (валюты не конвертируются между собой)' : '');
+      ' — ' + t('accountsTotalIncludedNote');
     container.appendChild(totalsEl);
   }
 }
