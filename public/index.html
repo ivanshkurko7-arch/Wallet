@@ -334,6 +334,18 @@
   }
   .splash-screen.hide { opacity: 0; pointer-events: none; }
   .splash-video { width: 100%; height: 100%; object-fit: cover; }
+
+  /* ===== PIN-код ===== */
+  .pin-screen {
+    position: fixed; inset: 0; z-index: 10000; background: #05070d;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  }
+  .pin-title { font-size: 19px; font-weight: 800; letter-spacing: 3px; color: white; }
+  .pin-dots { display: flex; gap: 16px; }
+  .pin-dots span { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); transition: 0.15s; }
+  .pin-dots span.filled { background: var(--purple); border-color: var(--purple); }
+  .pin-hidden-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .pin-error { color: #ff6b81; font-size: 12.5px; min-height: 16px; }
 </style>
 
 </head>
@@ -341,6 +353,13 @@
 
 <div class="splash-screen" id="splashScreen">
   <video class="splash-video" src="/splash-video.mp4" autoplay muted playsinline webkit-playsinline="true"></video>
+</div>
+
+<div class="pin-screen" id="pinScreen" style="display:none;">
+  <div class="pin-title">MIVARO</div>
+  <div class="pin-dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
+  <div class="pin-error" id="pinError"></div>
+  <input type="tel" inputmode="numeric" maxlength="4" id="pinInput" class="pin-hidden-input" autocomplete="off">
 </div>
 
 
@@ -521,6 +540,8 @@
       <button class="menu-item" onclick="closeMenu(); openModal('accounts')"><span class="ic">🏦</span><span class="lb" data-i18n="menuAccounts">Счета</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openTransferSheet()"><span class="ic">🔁</span><span class="lb" data-i18n="menuTransfer">Перевод между счетами</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openModal('budgets')"><span class="ic">📊</span><span class="lb" data-i18n="menuBudgets">Бюджеты</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('subscriptions')"><span class="ic">🔁</span><span class="lb" data-i18n="menuSubscriptions">Подписки</span><span class="chev">›</span></button>
+      <button class="menu-item" onclick="closeMenu(); openModal('goals')"><span class="ic">🎯</span><span class="lb" data-i18n="menuGoals">Цели накоплений</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); addToHomeScreenFn()"><span class="ic">📲</span><span class="lb" data-i18n="menuAddHome">Добавить на главный экран</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openModal('settings')"><span class="ic">⚙️</span><span class="lb" data-i18n="menuSettings">Настройки</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); startOnboarding()"><span class="ic">💡</span><span class="lb" data-i18n="menuHowToUse">Как пользоваться</span><span class="chev">›</span></button>
@@ -634,6 +655,30 @@ const DEFAULT_EXCHANGE_RATES = { USD: 41, EUR: 43, GBP: 50, PLN: 10 };
 let exchangeRates = loadJSON('walletExchangeRates', DEFAULT_EXCHANGE_RATES);
 CURRENCY_OPTIONS.forEach(function (c) { if (c !== 'UAH' && exchangeRates[c] == null) exchangeRates[c] = DEFAULT_EXCHANGE_RATES[c]; });
 
+// Живой курс: бесплатный публичный API без ключа (open.er-api.com). Берём курс "1 UAH = X валюты"
+// и переворачиваем в "1 валюта = Y UAH". Обновляем не чаще раза в 12 часов, чтобы не дёргать API зря.
+const RATES_TTL_MS = 12 * 60 * 60 * 1000;
+async function refreshExchangeRates(force) {
+  const last = Number(localStorage.getItem('walletExchangeRatesUpdated') || 0);
+  if (!force && Date.now() - last < RATES_TTL_MS) return false;
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/UAH');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data || data.result !== 'success' || !data.rates) throw new Error('bad response');
+    ['USD', 'EUR', 'GBP', 'PLN'].forEach(function (cur) {
+      const perUah = Number(data.rates[cur]);
+      if (perUah > 0) exchangeRates[cur] = Math.round((1 / perUah) * 100) / 100;
+    });
+    saveJSON('walletExchangeRates', exchangeRates);
+    localStorage.setItem('walletExchangeRatesUpdated', String(Date.now()));
+    return true;
+  } catch (e) {
+    console.error('Не удалось обновить курс валют:', e);
+    return false;
+  }
+}
+
 // Сумма остатков на всех счетах с указанным балансом, переведённая в гривну по курсам выше.
 function accountsBalanceInUAH() {
   let total = 0;
@@ -679,6 +724,39 @@ accounts.forEach(function (a) {
   }
 });
 let budgets = loadJSON('walletBudgets', {});
+let walletPIN = localStorage.getItem('walletPIN') || '';
+let pinDigits = '';
+function updatePinDots() {
+  document.querySelectorAll('#pinDots span').forEach(function (d, i) { d.classList.toggle('filled', i < pinDigits.length); });
+}
+function showPinScreen() {
+  document.getElementById('pinScreen').style.display = 'flex';
+  pinDigits = '';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  updatePinDots();
+  setTimeout(function () { document.getElementById('pinInput').focus(); }, 150);
+}
+function checkPinEntry() {
+  if (pinDigits === walletPIN) {
+    document.getElementById('pinScreen').style.display = 'none';
+    tg.HapticFeedback.notificationOccurred('success');
+  } else {
+    tg.HapticFeedback.notificationOccurred('error');
+    document.getElementById('pinError').textContent = t('wrongPin');
+    pinDigits = '';
+    document.getElementById('pinInput').value = '';
+    updatePinDots();
+  }
+}
+document.getElementById('pinInput').addEventListener('input', function (e) {
+  pinDigits = e.target.value.replace(/\D/g, '').slice(0, 4);
+  e.target.value = pinDigits;
+  updatePinDots();
+  if (pinDigits.length === 4) checkPinEntry();
+});
+if (walletPIN) showPinScreen();
+
 let walletTheme = localStorage.getItem('walletTheme') || 'system';
 
 /* ===== Язык интерфейса ===== */
@@ -727,7 +805,23 @@ const TRANSLATIONS = {
     accountsCountSuffix: 'счетов', accountNamePlaceholder: 'Например: Отпускные', notSpecified: 'Не указано',
     currencyHoldingsHint: 'Укажите каждую валюту и сумму отдельной строкой — все они будут переведены в гривну по курсам из Настроек и добавлены в общий баланс.',
     addCurrency: 'Добавить валюту', ownAccount: 'свой', allAccounts: 'Все счета', manage: 'Управлять',
-    accountsTotalPrefix: 'Итого по счетам с указанным балансом:', accountsTotalIncludedNote: 'уже учтено в общем балансе по курсу из Настроек'
+    accountsTotalPrefix: 'Итого по счетам с указанным балансом:', accountsTotalIncludedNote: 'уже учтено в общем балансе по курсу из Настроек',
+    menuSubscriptions: 'Подписки', menuGoals: 'Цели накоплений', modalSubscriptions: 'Подписки', modalGoals: 'Цели накоплений',
+    subscriptionsHint: 'Повторяющиеся операции (например, подписки) будут автоматически создаваться в указанный день каждого месяца.',
+    newSubscription: 'Новая подписка', editSubscription: 'Изменить подписку', noSubscriptions: 'Пока нет ни одной подписки',
+    subscriptionNamePlaceholder: 'Например: Netflix', everyMonthOn: 'каждое', paused: 'приостановлена',
+    dayOfMonthLabel: 'День списания (1–28)', activeLabel: 'Активна',
+    fillNameAndAmount: 'Укажите название и сумму', deleteSubscriptionConfirm: 'Удалить эту подписку?',
+    subscriptionsChargedToast: 'Автоматически списано:',
+    newGoal: 'Новая цель', editGoal: 'Изменить цель', noGoals: 'Пока нет ни одной цели накоплений',
+    goalNamePlaceholder: 'Например: Отпуск', goalTargetLabel: 'Сумма цели', goalCurrentLabel: 'Уже накоплено',
+    fillNameAndTarget: 'Укажите название и сумму цели', deleteGoalConfirm: 'Удалить эту цель?',
+    addContribution: 'Пополнить', contributionAmountLabel: 'Сумма пополнения',
+    wrongPin: 'Неверный PIN-код', settingsSecurity: 'Безопасность', pinProtection: 'Защита PIN-кодом', pinOn: 'Включена', pinOff: 'Выключена',
+    enterNewPin: 'Введите новый PIN-код (4 цифры)', repeatPin: 'Повторите PIN-код', disablePin: 'Отключить PIN-код',
+    pinMustBe4: 'PIN-код должен состоять из 4 цифр', pinMismatch: 'PIN-коды не совпадают',
+    pinEnabledToast: 'PIN-код включён', disablePinConfirm: 'Отключить защиту PIN-кодом?', pinDisabledToast: 'PIN-код отключён',
+    refreshRates: 'Обновить курс из интернета', ratesNeverUpdated: 'ещё не обновлялся', ratesUpdatedToast: 'Курс валют обновлён', ratesUpdateFailed: 'Не удалось получить курс. Проверьте интернет или введите вручную.'
   },
   uk: {
     allTime: 'Весь час', totalBalance: 'Загальний баланс', forPeriod: 'за період',
@@ -771,7 +865,23 @@ const TRANSLATIONS = {
     accountsCountSuffix: 'рахунків', accountNamePlaceholder: 'Наприклад: Відпускні', notSpecified: 'Не вказано',
     currencyHoldingsHint: 'Вкажіть кожну валюту і суму окремим рядком — усі вони будуть переведені в гривню за курсами з Налаштувань і додані до загального балансу.',
     addCurrency: 'Додати валюту', ownAccount: 'свій', allAccounts: 'Усі рахунки', manage: 'Керувати',
-    accountsTotalPrefix: 'Разом по рахунках з вказаним балансом:', accountsTotalIncludedNote: 'вже враховано в загальному балансі за курсом з Налаштувань'
+    accountsTotalPrefix: 'Разом по рахунках з вказаним балансом:', accountsTotalIncludedNote: 'вже враховано в загальному балансі за курсом з Налаштувань',
+    menuSubscriptions: 'Підписки', menuGoals: 'Цілі накопичень', modalSubscriptions: 'Підписки', modalGoals: 'Цілі накопичень',
+    subscriptionsHint: 'Повторювані операції (наприклад, підписки) будуть автоматично створюватися у вказаний день кожного місяця.',
+    newSubscription: 'Нова підписка', editSubscription: 'Змінити підписку', noSubscriptions: 'Поки що немає жодної підписки',
+    subscriptionNamePlaceholder: 'Наприклад: Netflix', everyMonthOn: 'кожне', paused: 'призупинена',
+    dayOfMonthLabel: 'День списання (1–28)', activeLabel: 'Активна',
+    fillNameAndAmount: 'Вкажіть назву і суму', deleteSubscriptionConfirm: 'Видалити цю підписку?',
+    subscriptionsChargedToast: 'Автоматично списано:',
+    newGoal: 'Нова ціль', editGoal: 'Змінити ціль', noGoals: 'Поки що немає жодної цілі накопичень',
+    goalNamePlaceholder: 'Наприклад: Відпустка', goalTargetLabel: 'Сума цілі', goalCurrentLabel: 'Вже накопичено',
+    fillNameAndTarget: 'Вкажіть назву і суму цілі', deleteGoalConfirm: 'Видалити цю ціль?',
+    addContribution: 'Поповнити', contributionAmountLabel: 'Сума поповнення',
+    wrongPin: 'Невірний PIN-код', settingsSecurity: 'Безпека', pinProtection: 'Захист PIN-кодом', pinOn: 'Увімкнено', pinOff: 'Вимкнено',
+    enterNewPin: 'Введіть новий PIN-код (4 цифри)', repeatPin: 'Повторіть PIN-код', disablePin: 'Вимкнути PIN-код',
+    pinMustBe4: 'PIN-код має складатися з 4 цифр', pinMismatch: 'PIN-коди не збігаються',
+    pinEnabledToast: 'PIN-код увімкнено', disablePinConfirm: 'Вимкнути захист PIN-кодом?', pinDisabledToast: 'PIN-код вимкнено',
+    refreshRates: 'Оновити курс з інтернету', ratesNeverUpdated: 'ще не оновлювався', ratesUpdatedToast: 'Курс валют оновлено', ratesUpdateFailed: 'Не вдалося отримати курс. Перевірте інтернет або введіть вручну.'
   },
   en: {
     allTime: 'All time', totalBalance: 'Total balance', forPeriod: 'for period',
@@ -815,7 +925,23 @@ const TRANSLATIONS = {
     accountsCountSuffix: 'accounts', accountNamePlaceholder: 'E.g. Vacation fund', notSpecified: 'Not specified',
     currencyHoldingsHint: 'List each currency and amount as a separate line — all of them will be converted to UAH using the rates from Settings and added to your total balance.',
     addCurrency: 'Add currency', ownAccount: 'own', allAccounts: 'All accounts', manage: 'Manage',
-    accountsTotalPrefix: 'Total across accounts with a set balance:', accountsTotalIncludedNote: 'already included in the total balance at the rate from Settings'
+    accountsTotalPrefix: 'Total across accounts with a set balance:', accountsTotalIncludedNote: 'already included in the total balance at the rate from Settings',
+    menuSubscriptions: 'Subscriptions', menuGoals: 'Savings goals', modalSubscriptions: 'Subscriptions', modalGoals: 'Savings goals',
+    subscriptionsHint: 'Recurring transactions (e.g. subscriptions) will be created automatically on the chosen day each month.',
+    newSubscription: 'New subscription', editSubscription: 'Edit subscription', noSubscriptions: 'No subscriptions yet',
+    subscriptionNamePlaceholder: 'E.g. Netflix', everyMonthOn: 'the', paused: 'paused',
+    dayOfMonthLabel: 'Billing day (1–28)', activeLabel: 'Active',
+    fillNameAndAmount: 'Enter a name and amount', deleteSubscriptionConfirm: 'Delete this subscription?',
+    subscriptionsChargedToast: 'Auto-charged:',
+    newGoal: 'New goal', editGoal: 'Edit goal', noGoals: 'No savings goals yet',
+    goalNamePlaceholder: 'E.g. Vacation', goalTargetLabel: 'Target amount', goalCurrentLabel: 'Already saved',
+    fillNameAndTarget: 'Enter a name and target amount', deleteGoalConfirm: 'Delete this goal?',
+    addContribution: 'Add funds', contributionAmountLabel: 'Amount to add',
+    wrongPin: 'Wrong PIN', settingsSecurity: 'Security', pinProtection: 'PIN protection', pinOn: 'On', pinOff: 'Off',
+    enterNewPin: 'Enter a new PIN (4 digits)', repeatPin: 'Repeat PIN', disablePin: 'Disable PIN',
+    pinMustBe4: 'PIN must be 4 digits', pinMismatch: 'PINs do not match',
+    pinEnabledToast: 'PIN enabled', disablePinConfirm: 'Disable PIN protection?', pinDisabledToast: 'PIN disabled',
+    refreshRates: 'Refresh rates from the internet', ratesNeverUpdated: 'never updated', ratesUpdatedToast: 'Exchange rates updated', ratesUpdateFailed: 'Could not fetch rates. Check your connection or enter manually.'
   },
   de: {
     allTime: 'Gesamte Zeit', totalBalance: 'Gesamtsaldo', forPeriod: 'für den Zeitraum',
@@ -859,7 +985,23 @@ const TRANSLATIONS = {
     accountsCountSuffix: 'Konten', accountNamePlaceholder: 'Z. B. Urlaubskasse', notSpecified: 'Nicht angegeben',
     currencyHoldingsHint: 'Gib jede Währung und jeden Betrag als eigene Zeile an — alle werden zum Kurs aus den Einstellungen in UAH umgerechnet und dem Gesamtsaldo hinzugefügt.',
     addCurrency: 'Währung hinzufügen', ownAccount: 'eigen', allAccounts: 'Alle Konten', manage: 'Verwalten',
-    accountsTotalPrefix: 'Summe der Konten mit angegebenem Saldo:', accountsTotalIncludedNote: 'bereits im Gesamtsaldo zum Kurs aus den Einstellungen enthalten'
+    accountsTotalPrefix: 'Summe der Konten mit angegebenem Saldo:', accountsTotalIncludedNote: 'bereits im Gesamtsaldo zum Kurs aus den Einstellungen enthalten',
+    menuSubscriptions: 'Abos', menuGoals: 'Sparziele', modalSubscriptions: 'Abos', modalGoals: 'Sparziele',
+    subscriptionsHint: 'Wiederkehrende Buchungen (z. B. Abos) werden automatisch am gewählten Tag jeden Monat erstellt.',
+    newSubscription: 'Neues Abo', editSubscription: 'Abo bearbeiten', noSubscriptions: 'Noch keine Abos',
+    subscriptionNamePlaceholder: 'Z. B. Netflix', everyMonthOn: 'jeden', paused: 'pausiert',
+    dayOfMonthLabel: 'Abbuchungstag (1–28)', activeLabel: 'Aktiv',
+    fillNameAndAmount: 'Name und Betrag angeben', deleteSubscriptionConfirm: 'Dieses Abo löschen?',
+    subscriptionsChargedToast: 'Automatisch abgebucht:',
+    newGoal: 'Neues Ziel', editGoal: 'Ziel bearbeiten', noGoals: 'Noch keine Sparziele',
+    goalNamePlaceholder: 'Z. B. Urlaub', goalTargetLabel: 'Zielbetrag', goalCurrentLabel: 'Bereits gespart',
+    fillNameAndTarget: 'Name und Zielbetrag angeben', deleteGoalConfirm: 'Dieses Ziel löschen?',
+    addContribution: 'Einzahlen', contributionAmountLabel: 'Einzahlungsbetrag',
+    wrongPin: 'Falscher PIN', settingsSecurity: 'Sicherheit', pinProtection: 'PIN-Schutz', pinOn: 'An', pinOff: 'Aus',
+    enterNewPin: 'Neuen PIN eingeben (4 Ziffern)', repeatPin: 'PIN wiederholen', disablePin: 'PIN deaktivieren',
+    pinMustBe4: 'Der PIN muss aus 4 Ziffern bestehen', pinMismatch: 'PINs stimmen nicht überein',
+    pinEnabledToast: 'PIN aktiviert', disablePinConfirm: 'PIN-Schutz deaktivieren?', pinDisabledToast: 'PIN deaktiviert',
+    refreshRates: 'Kurse aus dem Internet aktualisieren', ratesNeverUpdated: 'noch nie aktualisiert', ratesUpdatedToast: 'Wechselkurse aktualisiert', ratesUpdateFailed: 'Kurse konnten nicht abgerufen werden. Verbindung prüfen oder manuell eingeben.'
   }
 };
 function t(key) {
@@ -1505,6 +1647,12 @@ function renderModalContent(name) {
     } else if (name === 'budgets') {
       title.textContent = t('modalBudgets');
       renderBudgetsModal(body);
+    } else if (name === 'subscriptions') {
+      title.textContent = t('modalSubscriptions');
+      renderSubscriptionsModal(body);
+    } else if (name === 'goals') {
+      title.textContent = t('modalGoals');
+      renderGoalsModal(body);
     } else if (name === 'settings') {
       title.textContent = t('modalSettings');
       renderSettingsModal(body);
@@ -2094,6 +2242,317 @@ function clearBudgetPrompt() {
   renderBudgetsModal(document.getElementById('modalBody'));
 }
 
+/* ===== Подписки (повторяющиеся операции) ===== */
+let subscriptions = loadJSON('walletSubscriptions', []);
+function persistSubscriptions() { saveJSON('walletSubscriptions', subscriptions); }
+
+function renderSubscriptionsModal(body) {
+  body.innerHTML = '<div class="card-hint" style="margin-bottom:12px;">' + t('subscriptionsHint') + '</div>' +
+    '<div id="subsList"></div>' +
+    '<button class="add-cat-btn" onclick="openSubscriptionPrompt(null)">+ ' + t('newSubscription') + '</button>';
+  renderSubsList();
+}
+function renderSubsList() {
+  const listEl = document.getElementById('subsList');
+  listEl.innerHTML = '';
+  if (!subscriptions.length) { listEl.innerHTML = '<div class="empty">' + t('noSubscriptions') + '</div>'; return; }
+  subscriptions.forEach(function (s, i) {
+    const row = document.createElement('button');
+    row.className = 'cat-row';
+    const sign = s.type === 'income' ? '+' : '−';
+    row.innerHTML =
+      '<div class="cat-icon">' + (s.icon || '🔁') + '</div>' +
+      '<div class="cat-name">' + s.name + '<div class="lr-sub">' + sign + fmt(s.amount) + ' ₴ · ' + t('everyMonthOn') + ' ' + s.dayOfMonth + (s.active === false ? ' · ' + t('paused') : '') + '</div></div>' +
+      '<div class="cat-chev">›</div>';
+    row.onclick = function () { openSubscriptionPrompt(i); };
+    listEl.appendChild(row);
+  });
+}
+function openSubscriptionPrompt(index) {
+  promptMode = 'subscription';
+  promptEditingIndex = index;
+  const item = index != null ? subscriptions[index] : null;
+  const type = item ? item.type : 'expense';
+  document.getElementById('promptTitle').textContent = item ? t('editSubscription') : t('newSubscription');
+  document.getElementById('promptBody').innerHTML =
+    '<div class="icon-input-row">' +
+    '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '🔁') + '">' +
+    '<input type="text" id="promptName" placeholder="' + t('subscriptionNamePlaceholder') + '" value="' + (item ? item.name : '') + '" style="flex:1;">' +
+    '</div>' +
+    '<div class="seg-toggle" id="subTypeToggle">' +
+    '<button class="seg-btn' + (type === 'expense' ? ' active' : '') + '" data-type="expense">' + t('expenseTab') + '</button>' +
+    '<button class="seg-btn' + (type === 'income' ? ' active' : '') + '" data-type="income">' + t('incomeTab') + '</button>' +
+    '</div>' +
+    '<label>' + t('amountPlaceholder') + '</label>' +
+    '<input type="number" inputmode="decimal" id="promptAmount" value="' + (item ? item.amount : '') + '">' +
+    '<label>' + t('category') + '</label>' +
+    '<div class="chip-group" id="subCatChips"></div>' +
+    '<label>' + t('whereStored') + '</label>' +
+    '<div class="chip-group" id="subAccChips"></div>' +
+    '<label>' + t('dayOfMonthLabel') + '</label>' +
+    '<input type="number" inputmode="numeric" id="promptDay" min="1" max="28" value="' + (item ? item.dayOfMonth : 1) + '">' +
+    '<div class="list-row"><div class="lr-name">' + t('activeLabel') + '</div>' +
+    '<label class="toggle-switch"><input type="checkbox" id="promptSubActive" ' + (!item || item.active !== false ? 'checked' : '') + '><span class="slider"></span></label></div>' +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="saveSubscriptionPrompt()">' + t('save') + '</button>' +
+    (item ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deleteSubscriptionPrompt()">' + t('delete') + '</button>' : '');
+
+  function renderSubCategoryChips(forType) {
+    const catList = forType === 'expense' ? expenseCategories : incomeCategories;
+    const chipsEl = document.getElementById('subCatChips');
+    chipsEl.innerHTML = '';
+    catList.forEach(function (c) {
+      const chip = document.createElement('div');
+      chip.className = 'chip-btn' + (item && item.category === c.name ? ' selected' : (!item && c === catList[0] ? ' selected' : ''));
+      chip.textContent = c.icon + ' ' + c.name;
+      chip.dataset.cat = c.name;
+      chip.onclick = function () { chipsEl.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); }); chip.classList.add('selected'); };
+      chipsEl.appendChild(chip);
+    });
+  }
+  renderSubCategoryChips(type);
+  document.getElementById('subTypeToggle').querySelectorAll('.seg-btn').forEach(function (btn) {
+    btn.onclick = function () {
+      document.getElementById('subTypeToggle').querySelectorAll('.seg-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderSubCategoryChips(btn.dataset.type);
+    };
+  });
+
+  const accChipsEl = document.getElementById('subAccChips');
+  accountsList.forEach(function (a) {
+    const chip = document.createElement('div');
+    chip.className = 'chip-btn' + (item ? (item.account === a ? ' selected' : '') : (a === accountsList[0] ? ' selected' : ''));
+    chip.textContent = accIcon(a) + ' ' + a;
+    chip.dataset.acc = a;
+    chip.onclick = function () { accChipsEl.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); }); chip.classList.add('selected'); };
+    accChipsEl.appendChild(chip);
+  });
+  openPrompt();
+}
+function saveSubscriptionPrompt() {
+  const name = document.getElementById('promptName').value.trim();
+  const amount = Number(document.getElementById('promptAmount').value);
+  if (!name || !amount) { tg.showAlert(t('fillNameAndAmount')); return; }
+  const icon = document.getElementById('promptIcon').value.trim() || '🔁';
+  const type = document.getElementById('subTypeToggle').querySelector('.seg-btn.active').dataset.type;
+  const catChip = document.getElementById('subCatChips').querySelector('.chip-btn.selected');
+  const accChip = document.getElementById('subAccChips').querySelector('.chip-btn.selected');
+  const dayOfMonth = Math.min(28, Math.max(1, Number(document.getElementById('promptDay').value) || 1));
+  const active = document.getElementById('promptSubActive').checked;
+  const data = {
+    name: name, icon: icon, amount: amount, type: type,
+    category: catChip ? catChip.dataset.cat : 'Прочее',
+    account: accChip ? accChip.dataset.acc : accountsList[0],
+    dayOfMonth: dayOfMonth, active: active
+  };
+  if (promptEditingIndex != null) {
+    data.lastChargedMonth = subscriptions[promptEditingIndex].lastChargedMonth || null;
+    subscriptions[promptEditingIndex] = data;
+  } else {
+    data.lastChargedMonth = null;
+    subscriptions.push(data);
+  }
+  persistSubscriptions();
+  closePrompt();
+  renderSubsList();
+  tg.HapticFeedback.notificationOccurred('success');
+}
+function deleteSubscriptionPrompt() {
+  tg.showConfirm(t('deleteSubscriptionConfirm'), function (ok) {
+    if (!ok) return;
+    subscriptions.splice(promptEditingIndex, 1);
+    persistSubscriptions();
+    closePrompt();
+    renderSubsList();
+  });
+}
+
+// Проверяет все активные подписки и автоматически создаёт операцию, если наступил день списания
+// и в этом календарном месяце ещё не списывали. Вызывается один раз при каждой загрузке приложения.
+async function processSubscriptions() {
+  if (!subscriptions.length) return [];
+  const now = new Date();
+  const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const today = now.getDate();
+  let charged = [];
+  for (const s of subscriptions) {
+    if (s.active === false) continue;
+    if (s.lastChargedMonth === ym) continue;
+    if (today < s.dayOfMonth) continue;
+    try {
+      await api('/api/transactions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          init_data: initData, amount: s.amount, type: s.type, category: s.category,
+          account: s.account, comment: '🔁 ' + s.name, created_at: Math.floor(now.getTime() / 1000)
+        })
+      });
+      s.lastChargedMonth = ym;
+      charged.push(s.name);
+    } catch (e) { console.error('Не удалось списать подписку ' + s.name, e); }
+  }
+  if (charged.length) persistSubscriptions();
+  return charged;
+}
+
+/* ===== Цели накоплений ===== */
+let savingsGoals = loadJSON('walletSavingsGoals', []);
+function persistGoals() { saveJSON('walletSavingsGoals', savingsGoals); }
+
+function renderGoalsModal(body) {
+  body.innerHTML = '<div id="goalsList"></div>' +
+    '<button class="add-cat-btn" onclick="openGoalPrompt(null)">+ ' + t('newGoal') + '</button>';
+  renderGoalsList();
+}
+function renderGoalsList() {
+  const listEl = document.getElementById('goalsList');
+  listEl.innerHTML = '';
+  if (!savingsGoals.length) { listEl.innerHTML = '<div class="empty">' + t('noGoals') + '</div>'; return; }
+  savingsGoals.forEach(function (g, i) {
+    const pct = g.targetAmount > 0 ? Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100)) : 0;
+    const row = document.createElement('div');
+    row.className = 'budget-row';
+    row.innerHTML =
+      '<div class="budget-top" style="cursor:pointer;" onclick="openGoalPrompt(' + i + ')">' +
+      '<div class="cat-icon">' + (g.icon || '🎯') + '</div>' +
+      '<div class="cat-name">' + g.name + '</div>' +
+      '<div class="budget-val set">' + fmt(g.currentAmount) + ' / ' + fmt(g.targetAmount) + ' ' + currencySymbol(g.currency || 'UAH') + '</div>' +
+      '</div>' +
+      '<div class="budget-bar"><div class="budget-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<button class="submit-btn" style="margin-top:10px; padding:8px;" onclick="openGoalContributePrompt(' + i + ')">+ ' + t('addContribution') + '</button>';
+    listEl.appendChild(row);
+  });
+}
+function openGoalPrompt(index) {
+  promptMode = 'goal';
+  promptEditingIndex = index;
+  const item = index != null ? savingsGoals[index] : null;
+  const currency = item ? (item.currency || 'UAH') : 'UAH';
+  document.getElementById('promptTitle').textContent = item ? t('editGoal') : t('newGoal');
+  document.getElementById('promptBody').innerHTML =
+    '<div class="icon-input-row">' +
+    '<input type="text" id="promptIcon" maxlength="4" value="' + (item ? item.icon : '🎯') + '">' +
+    '<input type="text" id="promptName" placeholder="' + t('goalNamePlaceholder') + '" value="' + (item ? item.name : '') + '" style="flex:1;">' +
+    '</div>' +
+    '<label>' + t('goalTargetLabel') + '</label>' +
+    '<input type="number" inputmode="decimal" id="promptTarget" value="' + (item ? item.targetAmount : '') + '">' +
+    '<label>' + t('goalCurrentLabel') + '</label>' +
+    '<input type="number" inputmode="decimal" id="promptCurrent" value="' + (item ? item.currentAmount : 0) + '">' +
+    '<label>' + t('currencyLabel') + '</label>' +
+    '<div class="chip-group" id="goalCurrencyChips"></div>' +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="saveGoalPrompt()">' + t('save') + '</button>' +
+    (item ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="deleteGoalPrompt()">' + t('delete') + '</button>' : '');
+  const chipsEl = document.getElementById('goalCurrencyChips');
+  CURRENCY_OPTIONS.forEach(function (c) {
+    const chip = document.createElement('div');
+    chip.className = 'chip-btn' + (c === currency ? ' selected' : '');
+    chip.textContent = currencySymbol(c) + ' ' + c;
+    chip.dataset.currency = c;
+    chip.onclick = function () { chipsEl.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('selected'); }); chip.classList.add('selected'); };
+    chipsEl.appendChild(chip);
+  });
+  openPrompt();
+}
+function saveGoalPrompt() {
+  const name = document.getElementById('promptName').value.trim();
+  const target = Number(document.getElementById('promptTarget').value);
+  if (!name || !target) { tg.showAlert(t('fillNameAndTarget')); return; }
+  const icon = document.getElementById('promptIcon').value.trim() || '🎯';
+  const current = Number(document.getElementById('promptCurrent').value) || 0;
+  const currencyChip = document.getElementById('goalCurrencyChips').querySelector('.chip-btn.selected');
+  const data = { name: name, icon: icon, targetAmount: target, currentAmount: current, currency: currencyChip ? currencyChip.dataset.currency : 'UAH' };
+  if (promptEditingIndex != null) savingsGoals[promptEditingIndex] = data;
+  else savingsGoals.push(data);
+  persistGoals();
+  closePrompt();
+  renderGoalsList();
+  tg.HapticFeedback.notificationOccurred('success');
+}
+function deleteGoalPrompt() {
+  tg.showConfirm(t('deleteGoalConfirm'), function (ok) {
+    if (!ok) return;
+    savingsGoals.splice(promptEditingIndex, 1);
+    persistGoals();
+    closePrompt();
+    renderGoalsList();
+  });
+}
+function openGoalContributePrompt(index) {
+  promptMode = 'goalContribute';
+  promptEditingIndex = index;
+  const g = savingsGoals[index];
+  document.getElementById('promptTitle').textContent = g.name;
+  document.getElementById('promptBody').innerHTML =
+    '<label>' + t('contributionAmountLabel') + '</label>' +
+    '<input type="number" inputmode="decimal" id="promptContribution" placeholder="0">' +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="saveGoalContribution()">' + t('save') + '</button>';
+  openPrompt();
+}
+function saveGoalContribution() {
+  const amount = Number(document.getElementById('promptContribution').value) || 0;
+  savingsGoals[promptEditingIndex].currentAmount += amount;
+  persistGoals();
+  closePrompt();
+  renderGoalsList();
+  tg.HapticFeedback.notificationOccurred('success');
+}
+
+/* ===== Курс валют: подпись и ручное обновление ===== */
+function ratesUpdatedLabel() {
+  const ts = Number(localStorage.getItem('walletExchangeRatesUpdated') || 0);
+  if (!ts) return t('ratesNeverUpdated');
+  return new Date(ts).toLocaleString(walletLang === 'uk' ? 'uk-UA' : walletLang === 'en' ? 'en-GB' : walletLang === 'de' ? 'de-DE' : 'ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+async function manualRefreshRates() {
+  const btn = document.getElementById('refreshRatesBtn');
+  if (btn) btn.style.opacity = '0.5';
+  const ok = await refreshExchangeRates(true);
+  if (btn) btn.style.opacity = '';
+  if (ok) {
+    showToast(t('ratesUpdatedToast'));
+    if (currentModal === 'settings') renderSettingsModal(document.getElementById('modalBody'));
+    if (lastSummary) loadData(true);
+  } else {
+    showToast(t('ratesUpdateFailed'));
+  }
+}
+
+/* ===== PIN-код: установка/смена/отключение ===== */
+function openSetPinPrompt() {
+  promptMode = 'pin';
+  document.getElementById('promptTitle').textContent = t('pinProtection');
+  document.getElementById('promptBody').innerHTML =
+    '<label>' + t('enterNewPin') + '</label>' +
+    '<input type="password" inputmode="numeric" maxlength="4" id="newPinInput" placeholder="••••" style="text-align:center; font-size:20px; letter-spacing:8px;">' +
+    '<label>' + t('repeatPin') + '</label>' +
+    '<input type="password" inputmode="numeric" maxlength="4" id="newPinRepeat" placeholder="••••" style="text-align:center; font-size:20px; letter-spacing:8px;">' +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="saveNewPin()">' + t('save') + '</button>' +
+    (walletPIN ? '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:8px;" onclick="disablePin()">' + t('disablePin') + '</button>' : '');
+  openPrompt();
+}
+function saveNewPin() {
+  const a = document.getElementById('newPinInput').value.replace(/\D/g, '');
+  const b = document.getElementById('newPinRepeat').value.replace(/\D/g, '');
+  if (a.length !== 4) { tg.showAlert(t('pinMustBe4')); return; }
+  if (a !== b) { tg.showAlert(t('pinMismatch')); return; }
+  walletPIN = a;
+  localStorage.setItem('walletPIN', a);
+  closePrompt();
+  if (currentModal === 'settings') renderSettingsModal(document.getElementById('modalBody'));
+  tg.HapticFeedback.notificationOccurred('success');
+  showToast(t('pinEnabledToast'));
+}
+function disablePin() {
+  tg.showConfirm(t('disablePinConfirm'), function (ok) {
+    if (!ok) return;
+    walletPIN = '';
+    localStorage.removeItem('walletPIN');
+    closePrompt();
+    if (currentModal === 'settings') renderSettingsModal(document.getElementById('modalBody'));
+    showToast(t('pinDisabledToast'));
+  });
+}
+
 /* ===== Промпт-шторка (общая) ===== */
 function openPrompt() { document.getElementById('promptOverlay').classList.add('open'); }
 function closePrompt() { document.getElementById('promptOverlay').classList.remove('open'); promptMode = null; promptEditingIndex = null; }
@@ -2139,7 +2598,11 @@ function renderSettingsModal(body) {
 
     '<div class="settings-group-label">' + t('settingsCurrency') + '</div>' +
     '<div id="exchangeRatesList"></div>' +
+    '<button class="list-row" id="refreshRatesBtn" onclick="manualRefreshRates()"><div class="lr-name">' + t('refreshRates') + '</div><div class="lr-val">' + ratesUpdatedLabel() + '</div><div class="lr-chev">↻</div></button>' +
     '<div class="card-hint">' + t('exchangeRatesHint') + '</div>' +
+
+    '<div class="settings-group-label">' + t('settingsSecurity') + '</div>' +
+    '<button class="list-row" onclick="openSetPinPrompt()"><div class="lr-name">' + t('pinProtection') + '</div><div class="lr-val">' + (walletPIN ? t('pinOn') : t('pinOff')) + '</div><div class="lr-chev">›</div></button>' +
 
     '<div class="settings-group-label">' + t('settingsApp') + '</div>' +
     '<button class="list-row" onclick="addToHomeScreenFn()"><div class="lr-name">' + t('addToHomeScreen') + '</div><div class="lr-chev">›</div></button>' +
@@ -2517,6 +2980,9 @@ async function exportTransactionsCSV() {
 
 updatePeriodLabel();
 waitForInitData(2000).then(function () {
+  // Курс обновляем перед загрузкой данных, но не ждём дольше 3 секунд — не должен тормозить открытие.
+  return Promise.race([refreshExchangeRates(false), new Promise(function (r) { setTimeout(r, 3000); })]);
+}).then(function () {
   return loadData();
 }).finally(function () {
   const splash = document.getElementById('splashScreen');
