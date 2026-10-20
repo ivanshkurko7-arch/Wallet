@@ -28,8 +28,13 @@ exports.handler = async (event) => {
       ? await db.getSummary(familyId, start, end)
       : allTimeSummary;
 
+    // Остатки по местам хранения (карта, наличные, крипта...) — это накопленные деньги, а не
+    // показатель месяца: они переходят из месяца в месяц и не должны обнуляться с началом нового.
+    // Иначе сумма по счетам перестаёт сходиться с общим балансом. Поэтому берём их за всё время,
+    // а доход/расход/категории/участников — за выбранный период.
     const summary = {
       ...periodSummary,
+      by_account: allTimeSummary.by_account,
       overall_balance: allTimeSummary.balance,
     };
     summary.members = await db.getFamilyMembers(familyId);
