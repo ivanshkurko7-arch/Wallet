@@ -344,7 +344,15 @@
   .pin-dots { display: flex; gap: 16px; }
   .pin-dots span { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); transition: 0.15s; }
   .pin-dots span.filled { background: var(--purple); border-color: var(--purple); }
-  .pin-hidden-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 76px); gap: 14px; margin-top: 8px; }
+  .pin-key {
+    width: 76px; height: 76px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05); color: white; font-size: 26px; font-weight: 600; font-family: inherit;
+  }
+  .pin-key:active { background: var(--purple); border-color: var(--purple); }
+  .pin-key-del { font-size: 22px; background: none; border-color: transparent; }
+  .pin-key-empty { width: 76px; height: 76px; }
+  .pin-forgot { background: none; border: none; color: var(--hint); font-size: 13px; margin-top: 6px; font-family: inherit; }
   .pin-error { color: #ff6b81; font-size: 12.5px; min-height: 16px; }
 </style>
 
@@ -359,7 +367,13 @@
   <div class="pin-title">MIVARO</div>
   <div class="pin-dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
   <div class="pin-error" id="pinError"></div>
-  <input type="tel" inputmode="numeric" maxlength="4" id="pinInput" class="pin-hidden-input" autocomplete="off">
+  <div class="pin-pad" id="pinPad">
+    <button class="pin-key" data-k="1">1</button><button class="pin-key" data-k="2">2</button><button class="pin-key" data-k="3">3</button>
+    <button class="pin-key" data-k="4">4</button><button class="pin-key" data-k="5">5</button><button class="pin-key" data-k="6">6</button>
+    <button class="pin-key" data-k="7">7</button><button class="pin-key" data-k="8">8</button><button class="pin-key" data-k="9">9</button>
+    <span class="pin-key-empty"></span><button class="pin-key" data-k="0">0</button><button class="pin-key pin-key-del" data-k="del">⌫</button>
+  </div>
+  <button class="pin-forgot" id="pinForgot" style="display:none;" onclick="forgotPin()" data-i18n="forgotPin">Забыли PIN?</button>
 </div>
 
 
@@ -729,31 +743,46 @@ let pinDigits = '';
 function updatePinDots() {
   document.querySelectorAll('#pinDots span').forEach(function (d, i) { d.classList.toggle('filled', i < pinDigits.length); });
 }
+let pinFailures = 0;
 function showPinScreen() {
   document.getElementById('pinScreen').style.display = 'flex';
   pinDigits = '';
-  document.getElementById('pinInput').value = '';
   document.getElementById('pinError').textContent = '';
   updatePinDots();
-  setTimeout(function () { document.getElementById('pinInput').focus(); }, 150);
 }
 function checkPinEntry() {
   if (pinDigits === walletPIN) {
+    pinFailures = 0;
     document.getElementById('pinScreen').style.display = 'none';
-    tg.HapticFeedback.notificationOccurred('success');
+    try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
   } else {
-    tg.HapticFeedback.notificationOccurred('error');
+    pinFailures++;
+    try { tg.HapticFeedback.notificationOccurred('error'); } catch (e) {}
     document.getElementById('pinError').textContent = t('wrongPin');
     pinDigits = '';
-    document.getElementById('pinInput').value = '';
     updatePinDots();
+    // После 3 неудачных попыток показываем "Забыли PIN?", чтобы нельзя было заблокировать себя навсегда
+    if (pinFailures >= 3) document.getElementById('pinForgot').style.display = 'block';
   }
 }
-document.getElementById('pinInput').addEventListener('input', function (e) {
-  pinDigits = e.target.value.replace(/\D/g, '').slice(0, 4);
-  e.target.value = pinDigits;
+function forgotPin() {
+  tg.showConfirm(t('forgotPinConfirm'), function (ok) {
+    if (!ok) return;
+    walletPIN = '';
+    localStorage.removeItem('walletPIN');
+    pinFailures = 0;
+    document.getElementById('pinScreen').style.display = 'none';
+  });
+}
+document.getElementById('pinPad').addEventListener('click', function (e) {
+  const btn = e.target.closest('[data-k]');
+  if (!btn) return;
+  const k = btn.getAttribute('data-k');
+  document.getElementById('pinError').textContent = '';
+  if (k === 'del') pinDigits = pinDigits.slice(0, -1);
+  else if (pinDigits.length < 4) pinDigits += k;
   updatePinDots();
-  if (pinDigits.length === 4) checkPinEntry();
+  if (pinDigits.length === 4) setTimeout(checkPinEntry, 120);
 });
 if (walletPIN) showPinScreen();
 
@@ -821,7 +850,13 @@ const TRANSLATIONS = {
     enterNewPin: 'Введите новый PIN-код (4 цифры)', repeatPin: 'Повторите PIN-код', disablePin: 'Отключить PIN-код',
     pinMustBe4: 'PIN-код должен состоять из 4 цифр', pinMismatch: 'PIN-коды не совпадают',
     pinEnabledToast: 'PIN-код включён', disablePinConfirm: 'Отключить защиту PIN-кодом?', pinDisabledToast: 'PIN-код отключён',
-    refreshRates: 'Обновить курс из интернета', ratesNeverUpdated: 'ещё не обновлялся', ratesUpdatedToast: 'Курс валют обновлён', ratesUpdateFailed: 'Не удалось получить курс. Проверьте интернет или введите вручную.'
+    refreshRates: 'Обновить курс из интернета', ratesNeverUpdated: 'ещё не обновлялся', ratesUpdatedToast: 'Курс валют обновлён', ratesUpdateFailed: 'Не удалось получить курс. Проверьте интернет или введите вручную.',
+    forgotPin: 'Забыли PIN?', forgotPinConfirm: 'Сбросить PIN-код? Защита будет отключена, потом можно задать новый в Настройках.',
+    settingsDeleteData: 'Удаление данных', deleteMonthHistory: 'Удалить операции за месяц', deleteAllHistory: 'Удалить всю историю (обнулить)',
+    deleteHistoryHint: 'Удаляются только ваши операции. Если бюджет общий, операции других участников останутся. Отменить удаление нельзя.',
+    pickMonth: 'Выберите месяц', deleteMonthConfirm: 'Удалить все ваши операции за', 
+    deleteAllConfirm1: 'Удалить ВСЮ историю операций? Это действие необратимо.', deleteAllConfirm2: 'Точно удалить всё? Также обнулятся остатки на счетах, вписанные вручную.',
+    historyDeletedToast: 'История удалена. Операций:', historyDeleteFailed: 'Не удалось удалить историю'
   },
   uk: {
     allTime: 'Весь час', totalBalance: 'Загальний баланс', forPeriod: 'за період',
@@ -881,7 +916,13 @@ const TRANSLATIONS = {
     enterNewPin: 'Введіть новий PIN-код (4 цифри)', repeatPin: 'Повторіть PIN-код', disablePin: 'Вимкнути PIN-код',
     pinMustBe4: 'PIN-код має складатися з 4 цифр', pinMismatch: 'PIN-коди не збігаються',
     pinEnabledToast: 'PIN-код увімкнено', disablePinConfirm: 'Вимкнути захист PIN-кодом?', pinDisabledToast: 'PIN-код вимкнено',
-    refreshRates: 'Оновити курс з інтернету', ratesNeverUpdated: 'ще не оновлювався', ratesUpdatedToast: 'Курс валют оновлено', ratesUpdateFailed: 'Не вдалося отримати курс. Перевірте інтернет або введіть вручну.'
+    refreshRates: 'Оновити курс з інтернету', ratesNeverUpdated: 'ще не оновлювався', ratesUpdatedToast: 'Курс валют оновлено', ratesUpdateFailed: 'Не вдалося отримати курс. Перевірте інтернет або введіть вручну.',
+    forgotPin: 'Забули PIN?', forgotPinConfirm: 'Скинути PIN-код? Захист буде вимкнено, потім можна задати новий у Налаштуваннях.',
+    settingsDeleteData: 'Видалення даних', deleteMonthHistory: 'Видалити операції за місяць', deleteAllHistory: 'Видалити всю історію (обнулити)',
+    deleteHistoryHint: 'Видаляються лише ваші операції. Якщо бюджет спільний, операції інших учасників залишаться. Скасувати видалення не можна.',
+    pickMonth: 'Оберіть місяць', deleteMonthConfirm: 'Видалити всі ваші операції за',
+    deleteAllConfirm1: 'Видалити ВСЮ історію операцій? Цю дію не можна скасувати.', deleteAllConfirm2: 'Точно видалити все? Також обнуляться залишки на рахунках, вписані вручну.',
+    historyDeletedToast: 'Історію видалено. Операцій:', historyDeleteFailed: 'Не вдалося видалити історію'
   },
   en: {
     allTime: 'All time', totalBalance: 'Total balance', forPeriod: 'for period',
@@ -941,7 +982,13 @@ const TRANSLATIONS = {
     enterNewPin: 'Enter a new PIN (4 digits)', repeatPin: 'Repeat PIN', disablePin: 'Disable PIN',
     pinMustBe4: 'PIN must be 4 digits', pinMismatch: 'PINs do not match',
     pinEnabledToast: 'PIN enabled', disablePinConfirm: 'Disable PIN protection?', pinDisabledToast: 'PIN disabled',
-    refreshRates: 'Refresh rates from the internet', ratesNeverUpdated: 'never updated', ratesUpdatedToast: 'Exchange rates updated', ratesUpdateFailed: 'Could not fetch rates. Check your connection or enter manually.'
+    refreshRates: 'Refresh rates from the internet', ratesNeverUpdated: 'never updated', ratesUpdatedToast: 'Exchange rates updated', ratesUpdateFailed: 'Could not fetch rates. Check your connection or enter manually.',
+    forgotPin: 'Forgot PIN?', forgotPinConfirm: 'Reset the PIN? Protection will be turned off; you can set a new one in Settings.',
+    settingsDeleteData: 'Delete data', deleteMonthHistory: 'Delete transactions for a month', deleteAllHistory: 'Delete all history (reset)',
+    deleteHistoryHint: 'Only your own transactions are deleted. If the budget is shared, other members\' transactions stay. This cannot be undone.',
+    pickMonth: 'Pick a month', deleteMonthConfirm: 'Delete all your transactions for',
+    deleteAllConfirm1: 'Delete ALL transaction history? This cannot be undone.', deleteAllConfirm2: 'Really delete everything? Manually entered account balances will be reset too.',
+    historyDeletedToast: 'History deleted. Transactions:', historyDeleteFailed: 'Could not delete history'
   },
   de: {
     allTime: 'Gesamte Zeit', totalBalance: 'Gesamtsaldo', forPeriod: 'für den Zeitraum',
@@ -1001,7 +1048,13 @@ const TRANSLATIONS = {
     enterNewPin: 'Neuen PIN eingeben (4 Ziffern)', repeatPin: 'PIN wiederholen', disablePin: 'PIN deaktivieren',
     pinMustBe4: 'Der PIN muss aus 4 Ziffern bestehen', pinMismatch: 'PINs stimmen nicht überein',
     pinEnabledToast: 'PIN aktiviert', disablePinConfirm: 'PIN-Schutz deaktivieren?', pinDisabledToast: 'PIN deaktiviert',
-    refreshRates: 'Kurse aus dem Internet aktualisieren', ratesNeverUpdated: 'noch nie aktualisiert', ratesUpdatedToast: 'Wechselkurse aktualisiert', ratesUpdateFailed: 'Kurse konnten nicht abgerufen werden. Verbindung prüfen oder manuell eingeben.'
+    refreshRates: 'Kurse aus dem Internet aktualisieren', ratesNeverUpdated: 'noch nie aktualisiert', ratesUpdatedToast: 'Wechselkurse aktualisiert', ratesUpdateFailed: 'Kurse konnten nicht abgerufen werden. Verbindung prüfen oder manuell eingeben.',
+    forgotPin: 'PIN vergessen?', forgotPinConfirm: 'PIN zurücksetzen? Der Schutz wird deaktiviert, einen neuen PIN kannst du in den Einstellungen setzen.',
+    settingsDeleteData: 'Daten löschen', deleteMonthHistory: 'Buchungen eines Monats löschen', deleteAllHistory: 'Gesamten Verlauf löschen (zurücksetzen)',
+    deleteHistoryHint: 'Es werden nur deine eigenen Buchungen gelöscht. Bei gemeinsamem Budget bleiben die Buchungen der anderen erhalten. Nicht rückgängig zu machen.',
+    pickMonth: 'Monat wählen', deleteMonthConfirm: 'Alle deine Buchungen löschen für',
+    deleteAllConfirm1: 'GESAMTEN Buchungsverlauf löschen? Das kann nicht rückgängig gemacht werden.', deleteAllConfirm2: 'Wirklich alles löschen? Manuell eingetragene Kontostände werden ebenfalls zurückgesetzt.',
+    historyDeletedToast: 'Verlauf gelöscht. Buchungen:', historyDeleteFailed: 'Verlauf konnte nicht gelöscht werden'
   }
 };
 function t(key) {
@@ -2497,6 +2550,64 @@ function saveGoalContribution() {
   tg.HapticFeedback.notificationOccurred('success');
 }
 
+/* ===== Удаление истории: за месяц или целиком ===== */
+function openDeleteMonthPrompt() {
+  promptMode = 'deleteMonth';
+  const def = periodYear + '-' + String(periodMonth + 1).padStart(2, '0');
+  document.getElementById('promptTitle').textContent = t('deleteMonthHistory');
+  document.getElementById('promptBody').innerHTML =
+    '<label>' + t('pickMonth') + '</label>' +
+    '<input type="month" id="deleteMonthInput" value="' + def + '">' +
+    '<button class="submit-btn" style="background:rgba(255,107,129,0.14); color:#ff6b81; margin-top:14px;" onclick="confirmDeleteMonth()">' + t('delete') + '</button>';
+  openPrompt();
+}
+function monthLabel(ym) {
+  const parts = ym.split('-');
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+  return d.toLocaleDateString(walletLang === 'uk' ? 'uk-UA' : walletLang === 'en' ? 'en-GB' : walletLang === 'de' ? 'de-DE' : 'ru-RU', { month: 'long', year: 'numeric' });
+}
+function confirmDeleteMonth() {
+  const val = document.getElementById('deleteMonthInput').value;
+  if (!/^\d{4}-\d{2}$/.test(val)) { tg.showAlert(t('pickMonth')); return; }
+  const y = Number(val.slice(0, 4)), m = Number(val.slice(5, 7)) - 1;
+  const start = Math.floor(new Date(y, m, 1).getTime() / 1000);
+  const end = Math.floor(new Date(y, m + 1, 0, 23, 59, 59).getTime() / 1000);
+  tg.showConfirm(t('deleteMonthConfirm') + ' ' + monthLabel(val) + '?', function (ok) {
+    if (!ok) return;
+    runClearHistory({ clear: true, start: start, end: end }, false);
+  });
+}
+function confirmDeleteAllHistory() {
+  tg.showConfirm(t('deleteAllConfirm1'), function (ok) {
+    if (!ok) return;
+    tg.showConfirm(t('deleteAllConfirm2'), function (ok2) {
+      if (!ok2) return;
+      runClearHistory({ clear: true, all: true }, true);
+    });
+  });
+}
+async function runClearHistory(payload, resetLocalBalances) {
+  try {
+    const resp = await api('/api/transactions', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ init_data: initData }, payload))
+    });
+    if (resetLocalBalances) {
+      // Полный сброс: обнуляем и вручную вписанные остатки на счетах — иначе общий баланс не станет нулём
+      accounts.forEach(function (a) { a.balance = null; if (a.isMultiCurrency) a.currencyHoldings = []; });
+      persistAccounts();
+    }
+    closePrompt();
+    tg.HapticFeedback.notificationOccurred('success');
+    showToast(t('historyDeletedToast') + ' ' + (resp && resp.removed != null ? resp.removed : ''));
+    await loadData(true);
+    if (currentModal === 'settings') renderSettingsModal(document.getElementById('modalBody'));
+  } catch (e) {
+    console.error(e);
+    showToast(t('historyDeleteFailed'));
+  }
+}
+
 /* ===== Курс валют: подпись и ручное обновление ===== */
 function ratesUpdatedLabel() {
   const ts = Number(localStorage.getItem('walletExchangeRatesUpdated') || 0);
@@ -2609,6 +2720,11 @@ function renderSettingsModal(body) {
 
     '<div class="settings-group-label">' + t('settingsData') + '</div>' +
     '<button class="list-row" id="exportCsvBtn" onclick="exportTransactionsCSV()"><div class="lr-name">' + t('exportCsv') + '</div><div class="lr-chev">⬇</div></button>' +
+
+    '<div class="settings-group-label" style="color:#ff6b81;">' + t('settingsDeleteData') + '</div>' +
+    '<button class="list-row" onclick="openDeleteMonthPrompt()"><div class="lr-name" style="color:#ff6b81;">' + t('deleteMonthHistory') + '</div><div class="lr-chev">›</div></button>' +
+    '<button class="list-row" onclick="confirmDeleteAllHistory()"><div class="lr-name" style="color:#ff6b81;">' + t('deleteAllHistory') + '</div><div class="lr-chev">›</div></button>' +
+    '<div class="card-hint">' + t('deleteHistoryHint') + '</div>' +
 
     '<div class="settings-group-label">' + t('settingsMore') + '</div>' +
     '<button class="list-row" onclick="tg.showAlert(t(\'helpAlert\'))"><div class="lr-name">' + t('helpSupport') + '</div><div class="lr-chev">›</div></button>' +
