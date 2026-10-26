@@ -168,6 +168,21 @@ async function deleteTransaction(userId, transactionId) {
   return tx;
 }
 
+// Массовое удаление СВОИХ операций пользователя за период (start/end — unix-секунды).
+// Если start/end не переданы — удаляются все его операции. Операции других участников
+// общего бюджета не затрагиваются. Возвращает количество удалённых записей.
+async function deleteTransactionsInRange(userId, start, end) {
+  const familyId = await getFamilyId(userId);
+  if (!familyId) throw new Error('Пользователь не найден, отправьте /start в бота');
+  let query = supabase.from('transactions').delete({ count: 'exact' })
+    .eq('family_id', familyId).eq('user_id', userId);
+  if (start != null && Number.isFinite(Number(start))) query = query.gte('created_at', Math.floor(Number(start)));
+  if (end != null && Number.isFinite(Number(end))) query = query.lte('created_at', Math.floor(Number(end)));
+  const { error, count } = await query;
+  if (error) throw error;
+  return count || 0;
+}
+
 async function getFamilyMembers(familyId) {
   const { data } = await supabase
     .from('users').select('user_id, first_name, username').eq('family_id', familyId);
@@ -254,6 +269,7 @@ module.exports = {
   addTransaction,
   updateTransaction,
   deleteTransaction,
+  deleteTransactionsInRange,
   getFamilyMembers,
   setShortcutKey,
   getUserByShortcutKey,
