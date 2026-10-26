@@ -78,6 +78,25 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'DELETE') {
       const body = JSON.parse(event.body || '{}');
       const user = verifyTelegramData(body.init_data);
+
+      // Массовая очистка истории: либо всё (all: true), либо конкретный период (start + end).
+      // Требуем явные параметры, чтобы пустой запрос никогда не стёр всё по ошибке.
+      if (body.clear === true) {
+        const hasRange = Number.isFinite(Number(body.start)) && Number.isFinite(Number(body.end)) &&
+          body.start !== undefined && body.end !== undefined && body.start !== null && body.end !== null;
+        if (body.all !== true && !hasRange) {
+          return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Укажите all: true или период start/end' }) };
+        }
+        const removed = await db.deleteTransactionsInRange(user.id, hasRange && body.all !== true ? body.start : undefined, hasRange && body.all !== true ? body.end : undefined);
+        if (removed > 0) {
+          const familyId = await db.getFamilyId(user.id);
+          const members = await db.getFamilyMembers(familyId);
+          const name = user.first_name || user.username || 'Кто-то';
+          await notifyFamily(members, `🗑 <b>${name}</b> удалил(а) свою историю операций (${removed} шт.)`, user.id);
+        }
+        return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, removed: removed }) };
+      }
+
       if (body.id === undefined || body.id === null) {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'id операции не передан' }) };
       }
