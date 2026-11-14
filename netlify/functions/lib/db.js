@@ -14,6 +14,8 @@ const DEFAULT_ACCOUNTS = [
   'Карта', 'Наличные', 'Валюта', 'Крипта', 'Другое',
 ];
 
+const SESSION_GAP_SEC = 30 * 60;
+
 function genCode(length = 6) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let s = '';
@@ -26,9 +28,19 @@ async function getOrCreateUser(userId, username, firstName) {
     .from('users').select('*').eq('user_id', userId).maybeSingle();
 
   if (existing) {
-    await supabase.from('users')
-      .update({ username, first_name: firstName })
-      .eq('user_id', userId);
+    const updates = { username, first_name: firstName };
+    // Учёт активности для админ-панели. Колонки появляются после SQL-миграции — пока их нет,
+    // ничего лишнего не пишем, и приложение работает как раньше.
+    if ('last_seen_at' in existing) {
+      const now = Math.floor(Date.now() / 1000);
+      updates.last_seen_at = now;
+      // Новая «сессия» — если с прошлой активности прошло больше 30 минут
+      if (!existing.last_seen_at || now - Number(existing.last_seen_at) > SESSION_GAP_SEC) {
+        updates.visit_count = (Number(existing.visit_count) || 0) + 1;
+      }
+      if (!existing.first_seen_at) updates.first_seen_at = now;
+    }
+    await supabase.from('users').update(updates).eq('user_id', userId);
     return existing;
   }
 
@@ -41,6 +53,12 @@ async function getOrCreateUser(userId, username, firstName) {
     .insert({ user_id: userId, username, first_name: firstName, family_id: family.id })
     .select().single();
   if (userErr) throw userErr;
+
+  // Первая активность нового пользователя (если миграция уже выполнена; иначе ошибка игнорируется)
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    await supabase.from('users').update({ first_seen_at: now, last_seen_at: now, visit_count: 1 }).eq('user_id', userId);
+  } catch (e) { /* колонок ещё нет — не страшно */ }
 
   return user;
 }
@@ -183,6 +201,92 @@ async function deleteTransactionsInRange(userId, start, end) {
   return count || 0;
 }
 
+// Постраничная выборка: Supabase отдаёт максимум 1000 строк за запрос, поэтому читаем частями.
+async function fetchAllRows(buildQuery) {
+  const PAGE = 1000; let from = 0; const out = [];
+  for (;;) {
+    const { data, error } = await buildQuery().range(from, from + PAGE - 1);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < PAGE) break;
+    from += PAGE;
+  }
+  return out;
+}
+
+// Сводка для админ-панели: кто пользуется, как часто, какой у кого тариф.
+async function getAdminStats() {
+  const now = Math.floor(Date.now() / 1000);
+  const DAY = 86400;
+  const users = await fetchAllRows(() => supabase.from('users').select('*').order('user_id', { ascending: true }));
+  const txs = await fetchAllRows(() => supabase.from('transactions').select('user_id, created_at').order('id', { ascending: true }));
+
+  const trackingEnabled = users.some((u) => 'last_seen_at' in u);
+  const plansEnabled = users.some((u) => 'plan' in u);
+
+  const per = {};
+  users.forEach((u) => { per[u.user_id] = { total: 0, d7: 0, d30: 0, last: null, days: new Set() }; });
+  txs.forEach((t) => {
+    const p = per[t.user_id]; if (!p) return;
+    const ts = Number(t.created_at);
+    p.total++;
+    if (p.last == null || ts > p.last) p.last = ts;
+    if (now - ts <= 7 * DAY) p.d7++;
+    if (now - ts <= 30 * DAY) { p.d30++; p.days.add(new Date(ts * 1000).toISOString().slice(0, 10)); }
+  });
+
+  const famSize = {};
+  users.forEach((u) => { famSize[u.family_id] = (famSize[u.family_id] || 0) + 1; });
+
+  const list = users.map((u) => {
+    const p = per[u.user_id];
+    const plan = (u.plan || 'free');
+    const until = u.plan_until != null ? Number(u.plan_until) : null;
+    const expired = plan !== 'free' && until != null && until < now;
+    const lastSeen = u.last_seen_at != null ? Number(u.last_seen_at) : p.last; // без учёта визитов — по последней операции
+    return {
+      user_id: u.user_id, first_name: u.first_name || null, username: u.username || null,
+      family_id: u.family_id, family_size: famSize[u.family_id] || 1,
+      first_seen_at: u.first_seen_at != null ? Number(u.first_seen_at) : null,
+      last_seen_at: lastSeen != null ? lastSeen : null,
+      visit_count: Number(u.visit_count) || 0,
+      tx_total: p.total, tx_7d: p.d7, tx_30d: p.d30, active_days_30: p.days.size, last_tx_at: p.last,
+      plan: plan, plan_until: until, plan_status: expired ? 'expired' : (plan === 'free' ? 'free' : 'active'),
+    };
+  });
+  list.sort((a, b) => (b.last_seen_at || 0) - (a.last_seen_at || 0));
+
+  const seen = (u, sec) => u.last_seen_at != null && now - u.last_seen_at <= sec;
+  const totals = {
+    users: list.length,
+    active_24h: list.filter((u) => seen(u, DAY)).length,
+    active_7d: list.filter((u) => seen(u, 7 * DAY)).length,
+    active_30d: list.filter((u) => seen(u, 30 * DAY)).length,
+    new_7d: list.filter((u) => u.first_seen_at != null && now - u.first_seen_at <= 7 * DAY).length,
+    new_30d: list.filter((u) => u.first_seen_at != null && now - u.first_seen_at <= 30 * DAY).length,
+    families: Object.keys(famSize).length,
+    tx_total: txs.length,
+    tx_7d: txs.filter((t) => now - Number(t.created_at) <= 7 * DAY).length,
+    plans: {
+      free: list.filter((u) => u.plan_status === 'free').length,
+      active: list.filter((u) => u.plan_status === 'active').length,
+      expired: list.filter((u) => u.plan_status === 'expired').length,
+    },
+  };
+  return { generated_at: now, tracking_enabled: trackingEnabled, plans_enabled: plansEnabled, totals: totals, users: list };
+}
+
+// Назначение тарифа пользователю. days = null → бессрочно. plan: 'free' | 'pro'.
+async function setUserPlan(targetUserId, plan, days) {
+  if (!['free', 'pro'].includes(plan)) throw new Error('Неизвестный тариф');
+  const until = plan === 'free' || days == null ? null : Math.floor(Date.now() / 1000) + Math.round(Number(days)) * 86400;
+  const { data, error } = await supabase.from('users')
+    .update({ plan: plan, plan_until: until }).eq('user_id', targetUserId).select().maybeSingle();
+  if (error) throw new Error('Не удалось сохранить тариф. Выполните SQL-миграцию (колонки plan, plan_until). ' + error.message);
+  if (!data) throw new Error('Пользователь не найден');
+  return { user_id: targetUserId, plan: plan, plan_until: until };
+}
+
 async function getFamilyMembers(familyId) {
   const { data } = await supabase
     .from('users').select('user_id, first_name, username').eq('family_id', familyId);
@@ -269,6 +373,8 @@ module.exports = {
   addTransaction,
   updateTransaction,
   deleteTransaction,
+  getAdminStats,
+  setUserPlan,
   deleteTransactionsInRange,
   getFamilyMembers,
   setShortcutKey,
