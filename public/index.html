@@ -331,9 +331,42 @@
     position: fixed; inset: 0; z-index: 9999; background: #05070d;
     display: flex; align-items: center; justify-content: center;
     transition: opacity 0.5s ease; overflow: hidden;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none;
   }
   .splash-screen.hide { opacity: 0; pointer-events: none; }
-  .splash-video { width: 100%; height: 100%; object-fit: cover; }
+  .splash-screen * { pointer-events: none; } /* нажатия не доходят до видео — его нельзя поставить на паузу */
+  .splash-video, .splash-poster {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.25s ease;
+  }
+  .splash-video { opacity: 0; }            /* видео невидимо, пока не начало реально играть */
+  .splash-video.playing { opacity: 1; }
+  .splash-poster { opacity: 0; }           /* запасной статичный экран, если видео не запустилось */
+  .splash-poster.show { opacity: 1; }
+  /* Системные элементы управления видео (кнопка ▶ и т.п.) не показываем никогда */
+  .splash-video::-webkit-media-controls,
+  .splash-video::-webkit-media-controls-panel,
+  .splash-video::-webkit-media-controls-play-button,
+  .splash-video::-webkit-media-controls-start-playback-button,
+  .splash-video::-webkit-media-controls-overlay-play-button,
+  .splash-video::-webkit-media-controls-enclosure { display: none !important; -webkit-appearance: none; opacity: 0 !important; }
+
+  /* ===== Админ-панель ===== */
+  .adm-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  .adm-kpi { background: var(--card); border-radius: 14px; padding: 12px; }
+  .adm-kpi b { display: block; font-size: 21px; }
+  .adm-kpi span { font-size: 11px; color: var(--hint); }
+  .adm-row { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 11px 0; color: white; font-family: inherit; text-align: left; }
+  .adm-ava { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; background: linear-gradient(135deg, var(--purple), var(--pink)); color: #05070d; }
+  .adm-main { flex: 1; min-width: 0; }
+  .adm-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .adm-un { font-weight: 400; color: var(--hint); font-size: 12px; }
+  .adm-sub { font-size: 11px; color: var(--hint); margin-top: 2px; }
+  .adm-badge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  .adm-badge.free { background: rgba(255,255,255,0.08); color: var(--hint); }
+  .adm-badge.pro { background: rgba(37,99,235,0.22); color: #93c5fd; }
+  .adm-badge.expired { background: rgba(255,107,129,0.16); color: #ffb3c0; }
+  body.theme-light .adm-kpi { background: rgba(20,20,45,0.05); }
+  body.theme-light .adm-row { border-bottom-color: rgba(0,0,0,0.06); color: var(--text); }
 
   /* ===== PIN-код ===== */
   .pin-screen {
@@ -359,9 +392,35 @@
 </head>
 <body>
 
-<div class="splash-screen" id="splashScreen">
-  <video class="splash-video" src="/splash-video.mp4" autoplay muted playsinline webkit-playsinline="true"></video>
+<div class="splash-screen" id="splashScreen" aria-hidden="true">
+  <img class="splash-poster" id="splashPoster" src="/splash-poster.jpg" alt="" draggable="false">
+  <video class="splash-video" id="splashVideo" src="/splash-video.mp4" autoplay muted playsinline webkit-playsinline="true" preload="auto"
+         disablepictureinpicture disableremoteplayback x-webkit-airplay="deny" controlslist="nodownload nofullscreen noremoteplayback" tabindex="-1"></video>
 </div>
+<script>
+// Сплэш-видео: показываем его только когда оно реально играет, чтобы пользователь никогда не видел
+// системную кнопку ▶ / плеер. Если автозапуск заблокирован (энергосбережение, слабая сеть) — статичный постер.
+(function () {
+  var v = document.getElementById('splashVideo');
+  var poster = document.getElementById('splashPoster');
+  window.__splash = { started: false, ended: false, failed: false, t0: Date.now() };
+  if (!v) return;
+  v.muted = true; v.defaultMuted = true; v.controls = false;
+  function markStarted() { window.__splash.started = true; v.classList.add('playing'); }
+  v.addEventListener('playing', markStarted);
+  v.addEventListener('ended', function () { window.__splash.ended = true; });
+  v.addEventListener('error', function () { window.__splash.failed = true; poster.classList.add('show'); });
+  // Если iOS/Telegram поставил видео на паузу (а оно не закончилось) — тихо продолжаем, без кнопки ▶
+  v.addEventListener('pause', function () {
+    if (!v.ended && v.isConnected !== false) { var q = v.play(); if (q && q.catch) q.catch(function () {}); }
+  });
+  var p = v.play();
+  if (p && p.catch) p.catch(function () { poster.classList.add('show'); });
+  // Не пошло за 1.2 с (заблокирован автозапуск, слабая сеть) — показываем постер с логотипом
+  setTimeout(function () { if (!window.__splash.started) poster.classList.add('show'); }, 1200);
+  if (!v.paused && v.currentTime > 0) markStarted();
+})();
+</script>
 
 <div class="pin-screen" id="pinScreen" style="display:none;">
   <div class="pin-title">MIVARO</div>
@@ -561,6 +620,7 @@
       <button class="menu-item" onclick="closeMenu(); startOnboarding()"><span class="ic">💡</span><span class="lb" data-i18n="menuHowToUse">Как пользоваться</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); showInvite()"><span class="ic">🔗</span><span class="lb" data-i18n="menuInvitePartner">Пригласить партнёра</span><span class="chev">›</span></button>
       <button class="menu-item" onclick="closeMenu(); openJoinPrompt()"><span class="ic">🔑</span><span class="lb" data-i18n="menuEnterCode">Ввести код партнёра</span><span class="chev">›</span></button>
+      <button class="menu-item" id="adminMenuItem" style="display:none;" onclick="closeMenu(); openModal('admin')"><span class="ic">📈</span><span class="lb">Админ-панель</span><span class="chev">›</span></button>
     </div>
   </div>
 </div>
@@ -1300,6 +1360,8 @@ async function loadData() {
 
     const summary = await api('/api/summary?' + qs);
     lastSummary = summary;
+    const adminItem = document.getElementById('adminMenuItem');
+    if (adminItem) adminItem.style.display = summary.is_admin ? '' : 'none';
     if (!accountsWereLocal && summary.accounts && summary.accounts.length) {
       accounts = summary.accounts.map(function (name) {
         const def = DEFAULT_ACCOUNTS.find(function (d) { return d.name === name; });
@@ -1706,6 +1768,9 @@ function renderModalContent(name) {
     } else if (name === 'goals') {
       title.textContent = t('modalGoals');
       renderGoalsModal(body);
+    } else if (name === 'admin') {
+      title.textContent = 'Админ-панель';
+      renderAdminModal(body);
     } else if (name === 'settings') {
       title.textContent = t('modalSettings');
       renderSettingsModal(body);
@@ -2608,6 +2673,137 @@ async function runClearHistory(payload, resetLocalBalances) {
   }
 }
 
+/* ===== Админ-панель (видна только администратору; права проверяет сервер) ===== */
+let adminData = null, adminFilter = 'all', adminQuery = '';
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; });
+}
+function timeAgo(ts) {
+  if (!ts) return '—';
+  const sec = Math.max(0, Math.floor(Date.now() / 1000) - ts);
+  if (sec < 90) return 'только что';
+  if (sec < 3600) return Math.floor(sec / 60) + ' мин назад';
+  if (sec < 86400) return Math.floor(sec / 3600) + ' ч назад';
+  const d = Math.floor(sec / 86400);
+  return d < 60 ? d + ' дн назад' : Math.floor(d / 30) + ' мес назад';
+}
+function planBadge(u) {
+  if (u.plan_status === 'free') return '<span class="adm-badge free">Free</span>';
+  if (u.plan_status === 'expired') return '<span class="adm-badge expired">PRO истёк</span>';
+  const until = u.plan_until ? 'до ' + new Date(u.plan_until * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : 'бессрочно';
+  return '<span class="adm-badge pro">PRO · ' + until + '</span>';
+}
+function renderAdminModal(body) {
+  body.innerHTML = '<div class="empty">Загрузка…</div>';
+  api('/api/admin?init_data=' + encodeURIComponent(initData)).then(function (data) {
+    adminData = data;
+    renderAdminView(body);
+  }).catch(function (e) {
+    body.innerHTML = '<div class="empty">Не удалось загрузить: ' + escapeHtml(e.message) + '</div>';
+  });
+}
+function renderAdminView(body) {
+  const d = adminData, tt = d.totals;
+  const kpi = function (v, label) { return '<div class="adm-kpi"><b>' + v + '</b><span>' + label + '</span></div>'; };
+  let html = '';
+  if (!d.tracking_enabled) {
+    html += '<div class="card-hint" style="background:rgba(251,191,36,0.12); color:#fcd34d; padding:10px 12px; border-radius:12px; margin-bottom:12px;">Визиты пока не считаются — выполните SQL-миграцию (см. инструкцию). Пока «активность» определяется по последней операции.</div>';
+  }
+  html += '<div class="adm-kpis">' +
+    kpi(tt.users, 'пользователей') + kpi(tt.active_24h, 'активны за 24 ч') +
+    kpi(tt.active_7d, 'активны за 7 дней') + kpi(tt.active_30d, 'активны за 30 дней') +
+    kpi(tt.new_7d, 'новых за 7 дней') + kpi(tt.tx_7d, 'операций за 7 дней') +
+    kpi(tt.plans.active, 'на тарифе PRO') + kpi(tt.plans.free + tt.plans.expired, 'на Free / истёк') +
+    '</div>';
+  const chips = [['all', 'Все'], ['pro', 'PRO'], ['free', 'Free'], ['expired', 'Истёк'], ['active7', 'Активны 7 дн']];
+  html += '<div class="tx-filter-row" id="admFilters">' + chips.map(function (ch) {
+    return '<button class="tx-chip' + (adminFilter === ch[0] ? ' active' : '') + '" data-f="' + ch[0] + '">' + ch[1] + '</button>';
+  }).join('') + '</div>' +
+    '<input type="text" class="tx-search" id="admSearch" placeholder="Поиск по имени или @username" value="' + escapeHtml(adminQuery) + '">' +
+    '<div id="admList"></div>' +
+    '<button class="load-more-btn" id="admRefresh">↻ Обновить</button>';
+  body.innerHTML = html;
+  renderAdminList();
+  document.getElementById('admFilters').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    adminFilter = b.getAttribute('data-f'); renderAdminView(body);
+  });
+  document.getElementById('admSearch').addEventListener('input', function (e) { adminQuery = e.target.value; renderAdminList(); });
+  document.getElementById('admRefresh').addEventListener('click', function () { renderAdminModal(body); });
+}
+function renderAdminList() {
+  const q = adminQuery.trim().toLowerCase().replace(/^@/, '');
+  const now = Math.floor(Date.now() / 1000);
+  const rows = adminData.users.filter(function (u) {
+    if (adminFilter === 'pro' && u.plan_status !== 'active') return false;
+    if (adminFilter === 'free' && u.plan_status !== 'free') return false;
+    if (adminFilter === 'expired' && u.plan_status !== 'expired') return false;
+    if (adminFilter === 'active7' && !(u.last_seen_at && now - u.last_seen_at <= 7 * 86400)) return false;
+    if (q && ((u.first_name || '') + ' ' + (u.username || '')).toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  const listEl = document.getElementById('admList');
+  if (!rows.length) { listEl.innerHTML = '<div class="empty">Никого не найдено</div>'; return; }
+  listEl.innerHTML = rows.map(function (u) {
+    const name = u.first_name || 'Без имени';
+    return '<button class="adm-row" data-uid="' + u.user_id + '">' +
+      '<div class="adm-ava">' + escapeHtml(initials(name)) + '</div>' +
+      '<div class="adm-main">' +
+      '<div class="adm-name">' + escapeHtml(name) + (u.username ? ' <span class="adm-un">@' + escapeHtml(u.username) + '</span>' : '') + '</div>' +
+      '<div class="adm-sub">Был: ' + timeAgo(u.last_seen_at) + ' · визитов: ' + u.visit_count + ' · дней с операциями (30д): ' + u.active_days_30 + '</div>' +
+      '<div class="adm-sub">Операций: ' + u.tx_total + ' (за 30д: ' + u.tx_30d + ')' + (u.family_size > 1 ? ' · общий бюджет: ' + u.family_size + ' чел.' : '') + '</div>' +
+      '</div>' + planBadge(u) + '</button>';
+  }).join('');
+  listEl.querySelectorAll('.adm-row').forEach(function (el) {
+    el.addEventListener('click', function () { openPlanPrompt(Number(el.getAttribute('data-uid'))); });
+  });
+}
+let planDraft = { userId: null, plan: 'free', days: 30 };
+function openPlanPrompt(userId) {
+  const u = adminData.users.find(function (x) { return x.user_id === userId; });
+  if (!u) return;
+  promptMode = 'adminPlan';
+  planDraft = { userId: userId, plan: u.plan_status === 'free' ? 'free' : 'pro', days: 30 };
+  document.getElementById('promptTitle').textContent = 'Тариф: ' + (u.first_name || u.user_id);
+  renderPlanPrompt(u);
+  openPrompt();
+}
+function renderPlanPrompt(u) {
+  const chip = function (active, attrs, label) { return '<div class="chip-btn' + (active ? ' selected' : '') + '" ' + attrs + '>' + label + '</div>'; };
+  const dayOpts = [[30, '30 дней'], [90, '90 дней'], [365, '1 год'], [null, 'Бессрочно']];
+  document.getElementById('promptBody').innerHTML =
+    '<div class="card-hint" style="margin-bottom:10px;">Сейчас: ' + planBadge(u) + '</div>' +
+    '<label>Тариф</label><div class="chip-group" id="planChips">' +
+    chip(planDraft.plan === 'free', 'data-plan="free"', 'Free') + chip(planDraft.plan === 'pro', 'data-plan="pro"', 'PRO') + '</div>' +
+    (planDraft.plan === 'pro' ? '<label>Срок</label><div class="chip-group" id="dayChips">' +
+      dayOpts.map(function (o) { return chip(planDraft.days === o[0], 'data-days="' + (o[0] == null ? 'null' : o[0]) + '"', o[1]); }).join('') + '</div>' : '') +
+    '<button class="submit-btn" style="margin-top:14px;" onclick="savePlan()">' + t('save') + '</button>';
+  document.getElementById('planChips').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-plan]'); if (!b) return;
+    planDraft.plan = b.getAttribute('data-plan'); renderPlanPrompt(u);
+  });
+  const dc = document.getElementById('dayChips');
+  if (dc) dc.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-days]'); if (!b) return;
+    const v = b.getAttribute('data-days'); planDraft.days = v === 'null' ? null : Number(v); renderPlanPrompt(u);
+  });
+}
+async function savePlan() {
+  try {
+    await api('/api/admin', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ init_data: initData, action: 'set_plan', user_id: planDraft.userId, plan: planDraft.plan, days: planDraft.plan === 'pro' ? planDraft.days : null })
+    });
+    closePrompt();
+    tg.HapticFeedback.notificationOccurred('success');
+    showToast('Тариф сохранён');
+    if (currentModal === 'admin') renderAdminModal(document.getElementById('modalBody'));
+  } catch (e) {
+    console.error(e);
+    showToast(e.message || 'Не удалось сохранить тариф');
+  }
+}
+
 /* ===== Курс валют: подпись и ручное обновление ===== */
 function ratesUpdatedLabel() {
   const ts = Number(localStorage.getItem('walletExchangeRatesUpdated') || 0);
@@ -3094,19 +3290,38 @@ async function exportTransactionsCSV() {
   }
 }
 
-updatePeriodLabel();
-waitForInitData(2000).then(function () {
-  // Курс обновляем перед загрузкой данных, но не ждём дольше 3 секунд — не должен тормозить открытие.
-  return Promise.race([refreshExchangeRates(false), new Promise(function (r) { setTimeout(r, 3000); })]);
-}).then(function () {
-  return loadData();
-}).finally(function () {
+// Сплэш скрываем, когда загружены данные И анимация доиграла — но не дольше SPLASH_MAX_MS,
+// чтобы видео не обрывалось на полуслове и экран загрузки не висел бесконечно.
+const SPLASH_MAX_MS = 5000;
+function waitSplashDone() {
+  return new Promise(function (resolve) {
+    const s = window.__splash || { started: false, ended: false, failed: false, t0: Date.now() };
+    (function tick() {
+      const elapsed = Date.now() - s.t0;
+      if (s.ended) return resolve();                          // анимация доиграла
+      if (s.failed && elapsed > 900) return resolve();        // видео не загрузилось — постер показали и идём дальше
+      if (!s.started && elapsed > 1600) return resolve();     // автозапуск заблокирован — постер показали и идём дальше
+      if (elapsed > SPLASH_MAX_MS) return resolve();          // страховка от зависания
+      setTimeout(tick, 100);
+    })();
+  });
+}
+function hideSplash() {
   const splash = document.getElementById('splashScreen');
   if (splash) {
     splash.classList.add('hide');
     setTimeout(function () { splash.remove(); }, 600);
   }
+}
+
+updatePeriodLabel();
+const bootLoad = waitForInitData(2000).then(function () {
+  // Курс обновляем перед загрузкой данных, но не ждём дольше 3 секунд — не должен тормозить открытие.
+  return Promise.race([refreshExchangeRates(false), new Promise(function (r) { setTimeout(r, 3000); })]);
+}).then(function () {
+  return loadData();
 });
+Promise.all([bootLoad.catch(function () {}), waitSplashDone()]).then(hideSplash);
 </script>
 </body>
 </html>
